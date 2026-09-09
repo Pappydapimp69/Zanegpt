@@ -28,6 +28,19 @@ Do not silently mutate canonical files.
 
 PREF_KEYS = ("brevity", "detail_level", "format_preference")
 
+# Schema traits (persistence/session_state_schema.json) come first and keep their
+# names; extended scores are grouped so the sheet stays readable as it grows.
+TRAIT_GROUPS = (
+    ("CORE (schema)", ("fatigue_FL", "sarcasm_SS", "empathy_ES", "validation",
+                       "sarcasm_bursts")),
+    ("STYLE", ("brevity", "directiveness", "precision_demand",
+               "verbosity_tolerance", "register_stability")),
+    ("METHOD", ("empiricism", "systems_abstraction", "meta_cognition",
+                "correction_by_stance", "correction_accuracy")),
+    ("DISPOSITION", ("tenacity", "trust_but_verify", "adversarial_intent",
+                     "domain_engagement")),
+)
+
 
 def all_events(storage: ZaneStorage) -> list[dict]:
     p = storage.state_dir / "provisional_events.jsonl"
@@ -44,6 +57,12 @@ def render_sheet(state: dict, events: list[dict]) -> str:
     prefs = state.get("session_preferences", {})
     declared = state.get("declared", {})
     by_trait = Counter(e.get("target_trait", "?") for e in events)
+    # last recorded confidence per trait, for the provenance column
+    trait_src = {}
+    for e in events:
+        if e.get("event_type") in ("refine", "preference") and e.get("target_trait") in traits:
+            who = "declared" if e.get("declared") else e.get("inferred_by", "runtime")
+            trait_src[e["target_trait"]] = f"{who} {e.get('confidence', '')}"
     by_type = Counter(e.get("event_type", "?") for e in events)
     cands = sum(1 for e in events if e.get("persistent_candidate"))
     canon = sum(1 for e in events if e.get("approved_for_canonical"))
@@ -62,10 +81,23 @@ def render_sheet(state: dict, events: list[dict]) -> str:
     L.append(f"Class   {mode.get('name', '-'):<24} conf {mode.get('confidence', 0)}")
     L.append(f"        since turn {mode.get('since_turn', '-')}")
     L.append("")
-    L.append("ABILITY SCORES")
-    for k, v in traits.items():
-        L.append(f"  {k:<16} {v:>3}  {bar(v)}")
-    L.append("")
+    grouped = set()
+    for heading, keys in TRAIT_GROUPS:
+        rows = [(k, traits[k]) for k in keys if k in traits]
+        if not rows:
+            continue
+        grouped.update(k for k, _ in rows)
+        L.append(heading)
+        for k, v in rows:
+            src = trait_src.get(k, "")
+            L.append(f"  {k:<20} {v:>3}  {bar(v)}  {src}")
+        L.append("")
+    rest = [(k, v) for k, v in traits.items() if k not in grouped]
+    if rest:
+        L.append("OTHER")
+        for k, v in rest:
+            L.append(f"  {k:<20} {v:>3}  {bar(v)}  {trait_src.get(k, '')}")
+        L.append("")
     L.append("GUARD")
     L.append(f"  active {str(hf.get('active', False)).lower():<6} score {hf.get('score', 0):<3} "
              f"last trigger {hf.get('last_trigger_turn') or 'never'}")
