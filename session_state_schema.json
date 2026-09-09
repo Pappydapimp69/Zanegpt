@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "turn_count": 0,
+  "mode": {
+    "name": "baseline_cooperative",
+    "confidence": 0.0,
+    "since_turn": 0
+  },
+  "traits": {
+    "fatigue_FL": 0,
+    "sarcasm_SS": 1,
+    "empathy_ES": 5,
+    "validation": 5,
+    "sarcasm_bursts": 0
+  },
+  "hacker_flag": {
+    "active": false,
+    "score": 0,
+    "last_trigger_turn": null
+  },
+  "session_preferences": {
+    "brevity": null,
+    "detail_level": null,
+    "format_preference": null
+  },
+  "provisional_observations": [],
+  "last_updated": null
+}

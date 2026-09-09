@@ -1,0 +1,14 @@
+{
+  "event_id": "SESSION-0001",
+  "timestamp": "ISO-8601",
+  "turn": 0,
+  "event_type": "confirm|strengthen|weaken|contradict|refine|new|preference",
+  "target_trait": "",
+  "observation": "",
+  "evidence_excerpt": "",
+  "context_mode": "",
+  "confidence": 0.0,
+  "persistent_candidate": false,
+  "approved_for_canonical": false,
+  "notes": ""
+}
