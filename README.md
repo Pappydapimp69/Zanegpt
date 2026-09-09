@@ -15,6 +15,27 @@ Platform-neutral persistence core for the ZaneGPT reconstruction.
 - It does not silently rewrite canonical behavior files.
 - It does not fabricate historical ZaneGPT state.
 
+
+## Claude Code plugin
+
+This repository is also a Claude Code plugin marketplace. The reusable ZaneGPT
+behaviour — the interaction style, not the persistence runtime above — installs
+straight from GitHub:
+
+```
+/plugin marketplace add Pappydapimp69/Zanegpt
+/plugin install zanegpt@zanegpt
+```
+
+- `.claude-plugin/marketplace.json` — the marketplace manifest (repo root).
+- `zanegpt-plugin/` — the plugin itself; see its README for the OpenAI/Codex
+  import path and for why the skill needs YAML frontmatter.
+- `zanegpt-plugin.zip` — generated from `zanegpt-plugin/`, kept for surfaces
+  that want an archive. A copy, not the source.
+
+The plugin is independent of the runtime: it ships one skill and no code, and
+nothing in `runtime/` is required to use it.
+
 ## Expected repository structure
 
 ```text

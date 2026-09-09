@@ -1,0 +1,11 @@
+{
+  "name": "zanegpt",
+  "displayName": "ZaneGPT",
+  "version": "0.1.0",
+  "description": "ZaneGPT-style analytical reasoning and adversarial assumption testing as a reusable skill-only plugin.",
+  "author": {
+    "name": "ZaneGPT owner"
+  },
+  "repository": "https://github.com/Pappydapimp69/Zanegpt",
+  "keywords": ["reasoning", "analysis", "assumptions", "critique"]
+}

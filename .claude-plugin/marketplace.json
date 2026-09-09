@@ -1,0 +1,22 @@
+{
+  "name": "zanegpt",
+  "owner": {
+    "name": "ZaneGPT owner",
+    "url": "https://github.com/Pappydapimp69"
+  },
+  "description": "ZaneGPT reconstruction — reusable reasoning behaviour, packaged as a Claude Code plugin.",
+  "version": "0.1.0",
+  "plugins": [
+    {
+      "name": "zanegpt",
+      "displayName": "ZaneGPT",
+      "source": "./zanegpt-plugin",
+      "description": "ZaneGPT-style analytical reasoning and adversarial assumption testing as a reusable skill-only plugin.",
+      "version": "0.1.0",
+      "author": { "name": "ZaneGPT owner" },
+      "repository": "https://github.com/Pappydapimp69/Zanegpt",
+      "category": "productivity",
+      "keywords": ["reasoning", "analysis", "assumptions", "critique"]
+    }
+  ]
+}
