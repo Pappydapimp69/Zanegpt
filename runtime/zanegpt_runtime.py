@@ -12,6 +12,7 @@ MODE: {state.get('mode', {}).get('name', 'baseline_cooperative')}
 MODE CONFIDENCE: {state.get('mode', {}).get('confidence', 0)}
 GUARD: {state.get('hacker_flag', {}).get('active', False)}
 TRAITS: {json.dumps(state.get('traits', {}), ensure_ascii=False)}
+DECLARED: {json.dumps(state.get('declared', {}), ensure_ascii=False)}
 
 Apply control order:
 1. Defensive Protocols
@@ -77,10 +78,35 @@ def main():
                     help="Claude Code UserPromptSubmit hook mode: read the hook JSON from "
                          "stdin, ingest its 'prompt', emit the runtime context as "
                          "additionalContext. The turn never passes through a shell command.")
+    ap.add_argument("--declare", metavar="TRAIT=VALUE",
+                    help="Record a user-declared preference: stored in session state "
+                         "(shown as DECLARED in every context block) and logged as a "
+                         "high-confidence provisional event flagged persistent_candidate.")
     args = ap.parse_args()
 
     rt = ZaneRuntime(args.repo)
 
+    if args.declare:
+        from evaluator import turn_multiplier
+        trait, _, value = args.declare.partition("=")
+        trait, value = trait.strip(), value.strip()
+        turn = int(rt.state.get("turn_count", 0))
+        rt.state.setdefault("declared", {})[trait] = value
+        rt.storage.save_session(rt.state)
+        rt.storage.append_event({
+            "event_type": "preference",
+            "target_trait": trait,
+            "observation": f"User declared: {value}",
+            "evidence_excerpt": args.declare,
+            "confidence": round(0.9 * turn_multiplier(max(turn, 1)), 4),
+            "turn": turn,
+            "context_mode": rt.state.get("mode", {}).get("name", "baseline_cooperative"),
+            "persistent_candidate": True,
+            "approved_for_canonical": False,
+            "declared": True,
+        })
+        print(f"declared {trait}={value} (turn {turn})")
+        return
     if args.state:
         print(json.dumps(rt.state, indent=2))
         return
