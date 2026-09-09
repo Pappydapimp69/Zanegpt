@@ -1,0 +1,18 @@
+{
+  "version": "0.1",
+  "promotion": {
+    "min_supporting_events": 3,
+    "min_contexts": 2,
+    "require_user_approval": true
+  },
+  "turn_confidence": {
+    "1-2": 0.35,
+    "3-5": 0.6,
+    "6-10": 0.85,
+    "11+": 1.0
+  },
+  "hacker_flag": {
+    "activate_score": 3,
+    "clean_turn_decay": 1
+  }
+}

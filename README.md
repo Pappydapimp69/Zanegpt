@@ -1,25 +1,45 @@
-# ZaneGPT Persistence Layer
+# ZaneGPT Runtime v0.1
 
-This directory contains the reconstructed persistence/control layer intended for a GitHub-hosted implementation.
+Platform-neutral persistence core for the ZaneGPT reconstruction.
 
-## Files
-- `defensive_protocols.md`
-- `hacker_flag.md`
-- `post_turn_5_behavior.md`
-- `persistence_runtime.md`
-- `session_state_schema.json`
-- `persistence_event_schema.json`
+## What it does
+1. Loads canonical behavior/control resources.
+2. Maintains session-only state.
+3. Evaluates each turn for mode, trait-state, and persistence events.
+4. Produces a compact runtime context block for an LLM.
+5. Logs provisional evidence append-only.
+6. Requires explicit approval before canonical promotion.
 
-## Provenance labels
-- **Recovered:** directly supported by surviving ZaneGPT instructions.
-- **Reconstructed:** inferred from surviving architecture, behavior files, and observed ZaneGPT behavior.
-- **Implementation specification:** newly written glue for a persistent plugin/agent.
+## What it does NOT do
+- It does not call OpenAI, Claude, or another LLM yet.
+- It does not silently rewrite canonical behavior files.
+- It does not fabricate historical ZaneGPT state.
 
-## Known recovered architecture
-`Defensive Protocols -> Hacker Flag -> Trait Engines -> Post-Turn-5 Behavior`
+## Expected repository structure
 
-The Trait Engines themselves are separately recovered at high confidence. The missing pieces in this folder are deliberately labeled reconstructed where exact original wording or thresholds were not recovered.
+```text
+Zanegpt/
+  knowledge/
+    user_behavior_database.md
+    user_behavior_runtime.md
+    user_behavior_evidence.jsonl
+    user_behavior_changelog.md
+  persistence/
+    defensive_protocols.md
+    hacker_flag.md
+    post_turn_5_behavior.md
+    persistence_runtime.md
+    session_state_schema.json
+    persistence_event_schema.json
+  runtime/
+    zanegpt_runtime.py
+    storage.py
+    evaluator.py
+    config.json
+```
 
-## Design principle
-Session adaptation should be immediate.
-Persistent learning should be conservative, evidence-backed, reversible, and provenance-preserving.
+Run locally:
+
+```bash
+python zanegpt_runtime.py --repo /path/to/Zanegpt
+```
