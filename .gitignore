@@ -1,0 +1,4 @@
+.zanegpt/
+__pycache__/
+Client/config.json
+.env

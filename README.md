@@ -41,5 +41,20 @@ Zanegpt/
 Run locally:
 
 ```bash
-python zanegpt_runtime.py --repo /path/to/Zanegpt
+# interactive loop
+python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt
+
+# one turn, non-interactive (for driving from a skill/hook)
+python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt --ingest "user text"
+
+# dump current session state
+python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt --state
 ```
+
+Session state persists in `<repo>/.zanegpt/` (gitignored).
+
+## Claude Code skill
+
+`.claude/skills/zanegpt/SKILL.md` wires the runtime into Claude Code: invoke
+`/zanegpt` and each turn is ingested through the runtime, whose context block
+governs the reply. No API key is needed — the host model is the LLM.

@@ -69,9 +69,22 @@ class ZaneRuntime:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", required=True)
+    ap.add_argument("--ingest", metavar="TEXT",
+                    help="Ingest one turn non-interactively, print the runtime context, and exit.")
+    ap.add_argument("--state", action="store_true",
+                    help="Print current session state as JSON and exit.")
     args = ap.parse_args()
 
     rt = ZaneRuntime(args.repo)
+
+    if args.state:
+        print(json.dumps(rt.state, indent=2))
+        return
+    if args.ingest is not None:
+        result = rt.ingest(args.ingest)
+        print(result["runtime_context"])
+        return
+
     print("ZaneGPT runtime v0.1. Type /quit to exit.")
     while True:
         text = input("> ").strip()
