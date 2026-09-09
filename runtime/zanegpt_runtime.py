@@ -26,20 +26,100 @@ Persistent model guidance:
 Do not silently mutate canonical files.
 """
 
+PREF_KEYS = ("brevity", "detail_level", "format_preference")
+
+
+def all_events(storage: ZaneStorage) -> list[dict]:
+    p = storage.state_dir / "provisional_events.jsonl"
+    if not p.exists():
+        return []
+    return [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+
+
+def render_sheet(state: dict, events: list[dict]) -> str:
+    from collections import Counter
+    mode = state.get("mode", {})
+    hf = state.get("hacker_flag", {})
+    traits = state.get("traits", {})
+    prefs = state.get("session_preferences", {})
+    declared = state.get("declared", {})
+    by_trait = Counter(e.get("target_trait", "?") for e in events)
+    by_type = Counter(e.get("event_type", "?") for e in events)
+    cands = sum(1 for e in events if e.get("persistent_candidate"))
+    canon = sum(1 for e in events if e.get("approved_for_canonical"))
+    turn = int(state.get("turn_count", 0))
+    phase = "calibration" if turn <= 5 else "adaptive"
+    mult = 0.35 if turn <= 2 else 0.6 if turn <= 5 else 0.85 if turn <= 10 else 1.0
+
+    def bar(v, hi=10):
+        v = max(0, min(int(round(float(v))), hi))
+        return "#" * v + "." * (hi - v)
+
+    L = []
+    L.append("ZANEGPT  ::  CHARACTER SHEET")
+    L.append("=" * 44)
+    L.append(f"Level {turn:<4} {phase:<12} multiplier x{mult}")
+    L.append(f"Class   {mode.get('name', '-'):<24} conf {mode.get('confidence', 0)}")
+    L.append(f"        since turn {mode.get('since_turn', '-')}")
+    L.append("")
+    L.append("ABILITY SCORES")
+    for k, v in traits.items():
+        L.append(f"  {k:<16} {v:>3}  {bar(v)}")
+    L.append("")
+    L.append("GUARD")
+    L.append(f"  active {str(hf.get('active', False)).lower():<6} score {hf.get('score', 0):<3} "
+             f"last trigger {hf.get('last_trigger_turn') or 'never'}")
+    L.append("")
+    L.append("FEATS (declared)")
+    L.extend(f"  {k}: {v}" for k, v in declared.items())
+    if not declared:
+        L.append("  none")
+    L.append("")
+    L.append("PREFERENCES (session)")
+    for k in PREF_KEYS:
+        L.append(f"  {k:<18} {prefs.get(k) if prefs.get(k) is not None else '-'}")
+    L.append("")
+    L.append("EXPERIENCE (event log)")
+    L.append(f"  events {len(events):<4} candidates {cands:<3} canonical {canon}")
+    L.append("  by type   " + ", ".join(f"{k} {v}" for k, v in by_type.most_common()) if by_type else "  by type   -")
+    L.append("  by trait  " + ", ".join(f"{k} {v}" for k, v in by_trait.most_common(6)) if by_trait else "  by trait  -")
+    L.append("")
+    L.append(f"updated {state.get('last_updated', '-')[:19]}")
+    return "\n".join(L)
+
+
 class ZaneRuntime:
     def __init__(self, repo: str):
         self.storage = ZaneStorage(repo)
         self.resources = self.storage.load_resources()
         self.state = self.storage.load_session()
 
+    def refresh_derived(self) -> None:
+        """Keep the schema slots that nothing else writes in sync with the log."""
+        events = all_events(self.storage)
+        prefs = self.state.setdefault("session_preferences", {k: None for k in PREF_KEYS})
+        brevity_n = sum(1 for e in events if e.get("target_trait") == "session_brevity")
+        if prefs.get("brevity") is None and brevity_n >= 3:
+            prefs["brevity"] = "high"
+        reg = self.state.get("declared", {}).get("register")
+        if reg and prefs.get("format_preference") is None:
+            prefs["format_preference"] = reg
+        # rolling window of the last 5 events, compact form; the log is the full record
+        self.state["provisional_observations"] = [
+            {k: e.get(k) for k in ("turn", "event_type", "target_trait", "confidence")}
+            for e in events[-5:]
+        ]
+
     def ingest(self, user_text: str) -> dict:
         self.state["turn_count"] = int(self.state.get("turn_count", 0)) + 1
         ev = evaluate_turn(user_text, self.state)
 
+        prev = self.state.get("mode", {})
         self.state["mode"] = {
             "name": ev.mode,
             "confidence": round(ev.mode_confidence, 3),
-            "since_turn": self.state["turn_count"]
+            "since_turn": prev.get("since_turn", self.state["turn_count"])
+                          if prev.get("name") == ev.mode else self.state["turn_count"]
         }
 
         hf = self.state.setdefault("hacker_flag", {"active": False, "score": 0})
@@ -60,6 +140,7 @@ class ZaneRuntime:
             })
             self.storage.append_event(obs)
 
+        self.refresh_derived()
         self.storage.save_session(self.state)
 
         return {
@@ -73,7 +154,9 @@ def main():
     ap.add_argument("--ingest", metavar="TEXT",
                     help="Ingest one turn non-interactively, print the runtime context, and exit.")
     ap.add_argument("--state", action="store_true",
-                    help="Print current session state as JSON and exit.")
+                    help="Print the session as a character sheet and exit (--json for raw state).")
+    ap.add_argument("--json", action="store_true",
+                    help="With --state: emit raw JSON instead of the sheet.")
     ap.add_argument("--hook", action="store_true",
                     help="Claude Code UserPromptSubmit hook mode: read the hook JSON from "
                          "stdin, ingest its 'prompt', emit the runtime context as "
@@ -125,6 +208,12 @@ def main():
         trait, value = trait.strip(), value.strip()
         turn = int(rt.state.get("turn_count", 0))
         rt.state.setdefault("declared", {})[trait] = value
+        prefs = rt.state.setdefault("session_preferences", {k: None for k in PREF_KEYS})
+        if trait in PREF_KEYS:
+            prefs[trait] = value
+        elif trait == "register":
+            prefs["format_preference"] = value
+        rt.refresh_derived()
         rt.storage.save_session(rt.state)
         rt.storage.append_event({
             "event_type": "preference",
@@ -141,7 +230,12 @@ def main():
         print(f"declared {trait}={value} (turn {turn})")
         return
     if args.state:
-        print(json.dumps(rt.state, indent=2))
+        rt.refresh_derived()
+        rt.storage.save_session(rt.state)
+        if args.json:
+            print(json.dumps(rt.state, indent=2))
+        else:
+            print(render_sheet(rt.state, all_events(rt.storage)))
         return
     if args.hook:
         import sys

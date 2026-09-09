@@ -47,8 +47,15 @@ python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt
 # one turn, non-interactive (for driving from a skill/hook)
 python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt --ingest "user text"
 
-# dump current session state
+# character sheet (level, class, ability scores, guard, feats, experience)
 python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt --state
+
+# raw session state as JSON
+python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt --state --json
+
+# record a user-declared preference / set inferred trait values
+python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt --declare register=terse
+python runtime/zanegpt_runtime.py --repo /path/to/Zanegpt --trait empathy_ES=1 --trait validation=2
 ```
 
 Session state persists in `<repo>/.zanegpt/` (gitignored).
