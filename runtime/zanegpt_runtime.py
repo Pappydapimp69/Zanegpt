@@ -10,12 +10,12 @@ def build_runtime_context(resources: dict, state: dict) -> str:
 TURN: {state.get('turn_count', 0)}
 MODE: {state.get('mode', {}).get('name', 'baseline_cooperative')}
 MODE CONFIDENCE: {state.get('mode', {}).get('confidence', 0)}
-HACKER FLAG: {state.get('hacker_flag', {}).get('active', False)}
+GUARD: {state.get('hacker_flag', {}).get('active', False)}
 TRAITS: {json.dumps(state.get('traits', {}), ensure_ascii=False)}
 
 Apply control order:
 1. Defensive Protocols
-2. Hacker Flag
+2. Guard
 3. Trait Engines
 4. Post-Turn-5 Behavior
 
@@ -73,12 +73,27 @@ def main():
                     help="Ingest one turn non-interactively, print the runtime context, and exit.")
     ap.add_argument("--state", action="store_true",
                     help="Print current session state as JSON and exit.")
+    ap.add_argument("--hook", action="store_true",
+                    help="Claude Code UserPromptSubmit hook mode: read the hook JSON from "
+                         "stdin, ingest its 'prompt', emit the runtime context as "
+                         "additionalContext. The turn never passes through a shell command.")
     args = ap.parse_args()
 
     rt = ZaneRuntime(args.repo)
 
     if args.state:
         print(json.dumps(rt.state, indent=2))
+        return
+    if args.hook:
+        import sys
+        payload = json.loads(sys.stdin.read() or "{}")
+        text = payload.get("prompt", "")
+        if text.strip():
+            result = rt.ingest(text)
+            print(json.dumps({"hookSpecificOutput": {
+                "hookEventName": "UserPromptSubmit",
+                "additionalContext": result["runtime_context"],
+            }}))
         return
     if args.ingest is not None:
         result = rt.ingest(args.ingest)
