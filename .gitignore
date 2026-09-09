@@ -1,0 +1,3 @@
+
+# Brain local store (per-machine, never shared)
+.brain/
