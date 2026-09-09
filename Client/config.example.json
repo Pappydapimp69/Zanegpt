@@ -1,0 +1,8 @@
+{
+  "provider": "openai",
+  "model": "gpt-5.6-sol",
+  "max_history_turns": 24,
+  "include_evidence_registry": false,
+  "include_changelog": false,
+  "max_resource_chars": 180000
+}
