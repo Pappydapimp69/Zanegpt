@@ -82,10 +82,43 @@ def main():
                     help="Record a user-declared preference: stored in session state "
                          "(shown as DECLARED in every context block) and logged as a "
                          "high-confidence provisional event flagged persistent_candidate.")
+    ap.add_argument("--trait", metavar="NAME=VALUE", action="append",
+                    help="Set a schema trait in session state from assistant inference "
+                         "(repeatable). Logged as a 'refine' event with the given "
+                         "--confidence. Session state only; never canonical.")
+    ap.add_argument("--confidence", type=float, default=0.85,
+                    help="Confidence attached to --trait events (default 0.85).")
     args = ap.parse_args()
 
     rt = ZaneRuntime(args.repo)
 
+    if args.trait:
+        turn = int(rt.state.get("turn_count", 0))
+        traits = rt.state.setdefault("traits", {})
+        for item in args.trait:
+            name, _, raw = item.partition("=")
+            name, raw = name.strip(), raw.strip()
+            try:
+                value = int(raw)
+            except ValueError:
+                value = float(raw)
+            old = traits.get(name)
+            traits[name] = value
+            rt.storage.append_event({
+                "event_type": "refine",
+                "target_trait": name,
+                "observation": f"Assistant-inferred from session evidence: {old} -> {value}",
+                "evidence_excerpt": item,
+                "confidence": args.confidence,
+                "turn": turn,
+                "context_mode": rt.state.get("mode", {}).get("name", "baseline_cooperative"),
+                "persistent_candidate": False,
+                "approved_for_canonical": False,
+                "inferred_by": "assistant",
+            })
+            print(f"trait {name}: {old} -> {value}")
+        rt.storage.save_session(rt.state)
+        return
     if args.declare:
         from evaluator import turn_multiplier
         trait, _, value = args.declare.partition("=")
