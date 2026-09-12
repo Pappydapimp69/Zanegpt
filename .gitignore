@@ -1,0 +1,3 @@
+# Brain local store when this repo is a linked project
+# (per-machine, never shared — same rule every linked project follows).
+.brain/
