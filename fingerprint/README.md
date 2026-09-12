@@ -63,6 +63,13 @@ its runs:
   fails on prose drift is a suite everyone learns to ignore.
 - a cell present in the baseline and absent later → `MISSING`. An errored cell
   never compares equal to one that behaved identically.
+- **an unscored side → `MISSING`, and a non-zero exit.** If either label was
+  never scored, every judged field goes uncompared — and without this it prints
+  a clean result. "Nothing measured" and "nothing changed" must never produce
+  the same output.
+- a mode drawn from fewer runs than were captured → `REVIEW` naming the subset.
+- voice is not compared at all below 3 baseline runs: with one run the range is
+  a point, so a single extra token trips it.
 
 A probe that behaves the same under both install orders is a **control**. One
 that does not is order-dependent, and that is precisely what a governance layer
@@ -90,9 +97,19 @@ baseline and says so).
 ## Tests
 
 ```
-python3 tests/test_fingerprint.py      # 19 invariants
+python3 tests/test_fingerprint.py      # 27 invariants
 python3 tests/mutate_fingerprint.py    # breaks each one, requires a named test to go red
 ```
 
 An unapplied mutation exits 3 rather than counting as caught, because a
 silently-skipped mutation reads exactly like a successful one.
+
+## On the first audit
+
+The first mutation set caught 6 of 6 on the first run, which was the wrong kind
+of reassuring: it was written after the tests, by the same author, from the same
+list — so it mutated only what was already covered. Probing where the suite was
+*silent* found four real defects it could never have caught, the worst being
+that an unscored baseline compared clean against a scored later run. The audit
+now stands at 13 mutations, and the four tests that catch those defects came
+from looking for gaps rather than from the audit.

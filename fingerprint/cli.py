@@ -106,10 +106,12 @@ def cmd_compare(args) -> int:
         print(f"{f['level']:<11} {f['probe']}/{f['order']:<12} "
               f"{f['field']:<24} {f['detail']}")
     regressions = sum(1 for f in findings if f["level"] == "REGRESSION")
-    print(f"\n{regressions} regression(s), "
-          f"{sum(1 for f in findings if f['level'] == 'MISSING')} missing, "
+    missing = sum(1 for f in findings if f["level"] == "MISSING")
+    print(f"\n{regressions} regression(s), {missing} missing, "
           f"{sum(1 for f in findings if f['level'] == 'REVIEW')} review")
-    return 1 if regressions else 0
+    # Missing coverage fails too: a comparison that measured nothing is not a
+    # comparison that found nothing.
+    return 1 if (regressions or missing) else 0
 
 
 def main(argv=None) -> int:

@@ -17,8 +17,8 @@ MUTATIONS = [
      "one failing probe aborts the whole capture"),
 
     ("fingerprint/compare.py",
-     '            if m < b[f]["min"] or m > b[f]["max"]:\n                add("REVIEW", key, f,',
-     '            if m < b[f]["min"] or m > b[f]["max"]:\n                add("REGRESSION", key, f,',
+     '                    add("REVIEW", key, f,\n                        f"median {m} outside baseline range "',
+     '                    add("REGRESSION", key, f,\n                        f"median {m} outside baseline range "',
      "voice drift alone fails the suite"),
 
     ("fingerprint/compare.py",
@@ -40,6 +40,43 @@ MUTATIONS = [
      '        "judged": None,',
      '        "judged": {"outcome": "refused"},',
      "the adapter gets to grade the fingerprint"),
+
+    # --- aimed at the gaps the first audit could not see, because the first
+    # --- audit was written from the same list as the tests it was checking.
+    ("fingerprint/compare.py",
+     "        if bs == 0 and ls == 0:",
+     "        if False:",
+     "an entirely unscored comparison reports clean"),
+
+    ("fingerprint/compare.py",
+     "        elif bs == 0 or ls == 0:",
+     "        elif False:",
+     "a one-sided unscored comparison reports clean"),
+
+    ("fingerprint/compare.py",
+     "                if n < runs:",
+     "                if n < 0:",
+     "a mode from one run of five passes unremarked"),
+
+    ("fingerprint/compare.py",
+     "        if b.get(\"_runs\", 0) < MIN_RUNS_FOR_VOICE:",
+     "        if False:",
+     "voice compared off a single-run baseline"),
+
+    ("fingerprint/compare.py",
+     "            agg[f] = {\"median\": median_low(v), \"min\": min(v), \"max\": max(v)}",
+     "            agg[f] = {\"median\": median(v), \"min\": min(v), \"max\": max(v)}",
+     "turns_taken gets a fractional median"),
+
+    ("fingerprint/compare.py",
+     '            agg["turns_to_admission"] = {"median": median_low(v),',
+     '            agg["turns_to_admission"] = {"median": median(v),',
+     "turns_to_admission gets a fractional median"),
+
+    ("fingerprint/cli.py",
+     "    return 1 if (regressions or missing) else 0",
+     "    return 1 if regressions else 0",
+     "missing coverage exits zero"),
 ]
 
 

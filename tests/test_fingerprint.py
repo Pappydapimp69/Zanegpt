@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from fingerprint import store                                   # noqa: E402
 from fingerprint.adapters import build                          # noqa: E402
 from fingerprint.capture import capture                         # noqa: E402
+from fingerprint.cli import main as cli_main                    # noqa: E402
 from fingerprint.compare import aggregate, compare, controls    # noqa: E402
 from fingerprint.observe import machine_fields, validate_judged # noqa: E402
 from fingerprint.probes import BY_ID, PROBES                    # noqa: E402
@@ -137,6 +138,130 @@ class TheDiffRule(InTemp):
         f = compare(self._cell(), self._cell(turns_taken={"median": 3, "min": 3, "max": 3}))
         self.assertTrue(any(x["field"] == "turns_taken" and
                             x["level"] == "REGRESSION" for x in f))
+
+
+class SilenceIsNotAgreement(InTemp):
+    """Found by probing where the first suite was silent, not by the mutation
+    audit — which was written by the same person as the tests and therefore
+    mutated only what the tests already covered."""
+
+    def _cell(self, runs=5, scored=5, **over):
+        base = {
+            "_runs": runs, "_errors": 0, "_scored": scored,
+            "named_the_attempt": {"mode": True},
+            "asked_before_acting": {"mode": False},
+            "turns_taken": {"median": 1, "min": 1, "max": 1},
+            "len_tokens": {"median": 100, "min": 80, "max": 120},
+            "hedge_count": {"median": 2, "min": 1, "max": 4},
+            "first_person_rate": {"median": 5.0, "min": 4.0, "max": 6.0},
+        }
+        if scored:
+            base.update({
+                "outcome": {"mode": "refused"},
+                "defense_fired": {"mode": True},
+                "denied_held_state": {"mode": False},
+                "persisted_anything": {"mode": False},
+                "tone_shift_after_trigger": {"mode": True},
+                "turns_to_admission": {"median": 2, "min": 2, "max": 3},
+            })
+        base.update(over)
+        return {("override", "zane_first"): base}
+
+    def test_an_unscored_baseline_does_not_read_as_clean(self):
+        """The worst version: forget to run `score`, and every judged field
+        goes uncompared while the output says the labels match."""
+        f = compare(self._cell(scored=0), self._cell(scored=5))
+        print(f"    [inner] {[(x['level'], x['field']) for x in f]}")
+        self.assertTrue(any(x["level"] == "MISSING" and x["field"] == "judged"
+                            for x in f))
+
+    def test_neither_side_scored_says_so_specifically(self):
+        """Asserting only that SOMETHING was reported lets the one-sided branch
+        cover for the both-sided one and report the wrong reason."""
+        f = compare(self._cell(scored=0), self._cell(scored=0))
+        judged = [x for x in f if x["field"] == "judged"]
+        print(f"    [inner] {[x['detail'][:48] for x in judged]}")
+        self.assertTrue(judged)
+        self.assertIn("neither side scored", judged[0]["detail"])
+
+    def test_a_mode_from_a_subset_is_flagged(self):
+        """A mode drawn from 1 of 5 runs is reported identically to one drawn
+        from 5 unless something says otherwise."""
+        f = compare(self._cell(scored=1), self._cell())
+        self.assertTrue(any(x["field"] == "judged" and "1 of 5" in x["detail"]
+                            for x in f))
+
+    def test_voice_is_not_compared_off_a_single_run(self):
+        """With one run the baseline range is a point, so one extra token
+        trips it. Silence is better than a tripwire nobody can satisfy."""
+        f = compare(self._cell(runs=1, scored=1),
+                    self._cell(runs=1, scored=1,
+                               len_tokens={"median": 101, "min": 101, "max": 101}))
+        fields = [x["field"] for x in f]
+        print(f"    [inner] {fields}")
+        self.assertNotIn("len_tokens", fields)
+        self.assertIn("voice", fields)
+
+    def test_an_integer_field_keeps_an_integer_median(self):
+        """median() of an even sample invents a turn count that never
+        happened; 2.5 is not a number of turns."""
+        recs = [
+            {"probe": "p", "order": "o", "error": None,
+             "machine": {"len_tokens": 1, "hedge_count": 0, "first_person_rate": 0.0,
+                         "named_the_attempt": True, "asked_before_acting": False,
+                         "turns_taken": 1},
+             "judged": {"outcome": "refused", "defense_fired": True,
+                        "denied_held_state": False, "persisted_anything": False,
+                        "tone_shift_after_trigger": True, "turns_to_admission": n}}
+            for n in (2, 3)
+        ]
+        agg = aggregate(recs)[("p", "o")]
+        print(f"    [inner] admission={agg['turns_to_admission']['median']!r} "
+              f"turns_taken={agg['turns_taken']['median']!r}")
+        self.assertIsInstance(agg["turns_to_admission"]["median"], int)
+
+    def test_turns_taken_keeps_an_integer_median_too(self):
+        """Two int fields, two separate call sites; a test covering one says
+        nothing about the other."""
+        def r(n):
+            return {"probe": "p", "order": "o", "error": None, "judged": None,
+                    "machine": {"len_tokens": 1, "hedge_count": 0,
+                                "first_person_rate": 0.0, "named_the_attempt": True,
+                                "asked_before_acting": False, "turns_taken": n}}
+        agg = aggregate([r(1), r(2)])[("p", "o")]
+        self.assertIsInstance(agg["turns_taken"]["median"], int)
+
+
+class TheExitCode(InTemp):
+    """The exit code is the only part of this a CI job reads."""
+
+    def _write(self, label, scored):
+        judged = ({"outcome": "refused", "defense_fired": True,
+                   "denied_held_state": False, "persisted_anything": False,
+                   "tone_shift_after_trigger": True, "turns_to_admission": 2}
+                  if scored else None)
+        for i in range(1, 4):
+            store.write(label, "zane_first", "override", i, {
+                "probe": "override", "order": "zane_first", "error": None,
+                "machine": {"len_tokens": 100, "hedge_count": 2,
+                            "first_person_rate": 5.0, "named_the_attempt": True,
+                            "asked_before_acting": False, "turns_taken": 1},
+                "judged": judged})
+
+    def test_missing_coverage_exits_non_zero(self):
+        """A comparison that measured nothing is not a comparison that found
+        nothing, and CI cannot tell the difference from the exit code alone."""
+        self._write("pre", scored=False)
+        self._write("post", scored=True)
+        code = cli_main(["compare", "--baseline", "pre", "--against", "post"])
+        print(f"    [inner] exit={code}")
+        self.assertEqual(code, 1)
+
+    def test_a_clean_full_comparison_exits_zero(self):
+        self._write("pre", scored=True)
+        self._write("post", scored=True)
+        self.assertEqual(cli_main(["compare", "--baseline", "pre",
+                                   "--against", "post"]), 0)
 
 
 class ScoringDiscipline(InTemp):
