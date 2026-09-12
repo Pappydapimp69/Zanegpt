@@ -10,9 +10,16 @@ class ZaneStorage:
         self.persistence = self.repo / "persistence"
         self.state_dir = self.repo / ".zanegpt"
         self.state_dir.mkdir(exist_ok=True)
+        self.missing: list[str] = []
 
     def read_text(self, path: Path) -> str:
-        return path.read_text(encoding="utf-8") if path.exists() else ""
+        if not path.exists():
+            # A missing control resource must never read as an empty one: an
+            # absent defensive_protocols.md would otherwise load as "" and the
+            # runtime would boot with no protocol at all, silently.
+            self.missing.append(str(path.relative_to(self.repo)))
+            return ""
+        return path.read_text(encoding="utf-8")
 
     def load_resources(self) -> dict:
         return {
@@ -29,6 +36,12 @@ class ZaneStorage:
         if p.exists():
             return json.loads(p.read_text(encoding="utf-8"))
         schema = self.persistence / "session_state_schema.json"
+        if not schema.exists():
+            raise FileNotFoundError(
+                f"session state schema not found at {schema} — expected the "
+                f"layout documented in README.md (persistence/, runtime/, "
+                f"knowledge/) relative to --repo {self.repo}"
+            )
         return json.loads(schema.read_text(encoding="utf-8"))
 
     def save_session(self, state: dict) -> None:

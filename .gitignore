@@ -1,2 +1,6 @@
 # brain local store (per-project, not shared)
 .brain/
+
+# runtime session state (session-only by design)
+.zanegpt/
+__pycache__/

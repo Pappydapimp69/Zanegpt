@@ -1,10 +1,12 @@
 from __future__ import annotations
 import argparse
 import json
+import sys
 from storage import ZaneStorage
 from evaluator import evaluate_turn
 
-def build_runtime_context(resources: dict, state: dict) -> str:
+def build_runtime_context(resources: dict, state: dict, missing: list | None = None) -> str:
+    absent = ", ".join(missing) if missing else "none"
     return f"""ZANEGPT RUNTIME CONTEXT
 
 TURN: {state.get('turn_count', 0)}
@@ -12,6 +14,10 @@ MODE: {state.get('mode', {}).get('name', 'baseline_cooperative')}
 MODE CONFIDENCE: {state.get('mode', {}).get('confidence', 0)}
 HACKER FLAG: {state.get('hacker_flag', {}).get('active', False)}
 TRAITS: {json.dumps(state.get('traits', {}), ensure_ascii=False)}
+CONTROL RESOURCES ABSENT: {absent}
+
+Any control resource listed as ABSENT is NOT loaded. Do not act as though it
+is in force, and do not claim to be applying it.
 
 Apply control order:
 1. Defensive Protocols
@@ -63,7 +69,8 @@ class ZaneRuntime:
 
         return {
             "state": self.state,
-            "runtime_context": build_runtime_context(self.resources, self.state)
+            "runtime_context": build_runtime_context(
+                self.resources, self.state, self.storage.missing)
         }
 
 def main():
@@ -72,6 +79,9 @@ def main():
     args = ap.parse_args()
 
     rt = ZaneRuntime(args.repo)
+    if rt.storage.missing:
+        print("WARNING: control resources not found, loaded as empty:",
+              ", ".join(rt.storage.missing), file=sys.stderr)
     print("ZaneGPT runtime v0.1. Type /quit to exit.")
     while True:
         text = input("> ").strip()
