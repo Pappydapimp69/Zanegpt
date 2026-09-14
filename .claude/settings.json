@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "zanegpt": {
+      "source": {
+        "source": "github",
+        "repo": "Pappydapimp69/Zanegpt"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "zanegpt@zanegpt": true
+  }
+}
