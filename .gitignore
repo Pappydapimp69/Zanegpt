@@ -1,0 +1,5 @@
+# Brain local store — per-machine, never shared.
+.brain/
+
+__pycache__/
+*.pyc
