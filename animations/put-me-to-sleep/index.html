@@ -1,0 +1,1195 @@
+<title>Put Me To Sleep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,400;0,500;1,6..72,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap">
+<style>
+:root{
+  --ground:#080B09;
+  --loam:#11170F;
+  --leaf:#8CCB6E;
+  --sap:#CFE7BA;
+  --dusk:#3A5C7E;
+  --dusk-deep:#16232F;
+  --wrong:#C9718F;
+  --bone:#E9EFE6;
+  --ash:#7F8C7E;
+  --ash-dim:#4A544A;
+  --hair:rgba(207,231,186,.16);
+  --serif:"Newsreader",ui-serif,Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--ground);color:var(--bone);
+  font-family:var(--serif);overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+.app{position:relative;height:100%;width:100%;overflow:hidden;background:var(--ground)}
+#gl{position:absolute;inset:0;display:block;width:100%;height:100%}
+
+/* --- film grade: vignette + grain + scanline drift ------------------ */
+.grade{position:absolute;inset:0;pointer-events:none;z-index:2}
+.vignette{position:absolute;inset:0;
+  background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 44%, rgba(0,0,0,.38) 84%, rgba(0,0,0,.70) 100%);}
+.grain{position:absolute;inset:-60%;opacity:.07;mix-blend-mode:overlay;
+  background-image:var(--grain-url);background-size:180px 180px;
+  animation:grainShift 1.1s steps(6) infinite}
+@keyframes grainShift{
+  0%{transform:translate(0,0)}17%{transform:translate(-3%,2%)}34%{transform:translate(2%,-4%)}
+  51%{transform:translate(-2%,-2%)}68%{transform:translate(4%,1%)}85%{transform:translate(-1%,3%)}
+  100%{transform:translate(0,0)}
+}
+.bleed{position:absolute;inset:0;opacity:0;pointer-events:none;
+  background:linear-gradient(92deg, rgba(201,113,143,.5), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(58,92,126,.45));
+  mix-blend-mode:screen;transition:opacity .18s linear}
+.app.glitch .bleed{opacity:.85}
+.app.glitch #gl{filter:saturate(1.25) contrast(1.06)}
+.app.glitch .slice{opacity:1}
+.slice{position:absolute;left:0;right:0;height:9%;opacity:0;pointer-events:none;
+  background:rgba(207,231,186,.05);backdrop-filter:none;
+  box-shadow:inset 0 0 0 1px rgba(201,113,143,.12)}
+.s1{top:22%;transform:translateX(-2.5%)}
+.s2{top:47%;transform:translateX(3.2%)}
+.s3{top:71%;transform:translateX(-1.6%)}
+
+/* --- app chrome: top bar -------------------------------------------- */
+.hud{position:absolute;top:0;left:0;right:0;z-index:4;
+  display:flex;align-items:center;gap:14px;
+  padding:16px 20px;pointer-events:none;
+  font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ash);
+  background:linear-gradient(to bottom, rgba(8,11,9,.72), rgba(8,11,9,0));}
+.mark{display:flex;align-items:center;gap:9px;color:var(--sap);flex:0 0 auto}
+.mark svg{width:15px;height:15px;display:block;filter:drop-shadow(0 0 6px rgba(140,203,110,.55))}
+.mark b{font-weight:500;letter-spacing:.14em}
+.hud .spacer{flex:1 1 auto}
+.act{color:var(--ash-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc{font-variant-numeric:tabular-nums;color:var(--ash-dim);flex:0 0 auto}
+
+/* --- floating identification tags (the app's coloured dots) --------- */
+.tags{position:absolute;inset:0;z-index:3;pointer-events:none}
+.tag{position:absolute;transform:translate(-50%,-50%);
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+  opacity:0;transition:opacity .5s ease}
+.tag.on{opacity:1}
+.tag i{width:9px;height:9px;border-radius:50%;background:var(--leaf);
+  box-shadow:0 0 0 3px rgba(140,203,110,.16),0 0 12px rgba(140,203,110,.7);
+  flex:0 0 auto;transition:background .4s ease,box-shadow .4s ease}
+.tag.amber i{background:#D9A441;box-shadow:0 0 0 3px rgba(217,164,65,.16),0 0 12px rgba(217,164,65,.7)}
+.tag span{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--sap);
+  background:rgba(8,11,9,.55);padding:3px 8px;border:1px solid var(--hair);border-radius:2px}
+.tag em{font-family:var(--mono);font-size:10px;font-style:normal;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--leaf);opacity:0;transition:opacity .3s ease}
+.tag.noted em{opacity:.9}
+
+/* --- caption band ---------------------------------------------------- */
+.capwrap{position:absolute;left:0;right:0;bottom:82px;z-index:4;
+  display:flex;justify-content:center;padding:0 22px;pointer-events:none}
+.cap{max-width:640px;width:100%;text-align:center;
+  font-size:clamp(19px,2.55vw,30px);line-height:1.38;font-weight:300;
+  color:var(--bone);text-wrap:balance;
+  text-shadow:0 2px 26px rgba(0,0,0,.92),0 0 3px rgba(0,0,0,.7);
+  opacity:0;transform:translateY(7px);
+  transition:opacity .62s ease,transform .62s cubic-bezier(.2,.7,.3,1)}
+.cap.on{opacity:1;transform:none}
+.cap.app{font-family:var(--mono);font-weight:400;font-size:clamp(14px,1.72vw,19px);
+  letter-spacing:.055em;color:var(--leaf);line-height:1.6}
+.cap.app::before{content:"";display:block;width:26px;height:1px;margin:0 auto 14px;
+  background:var(--leaf);opacity:.5}
+.cap.wrong{color:var(--wrong)}
+.cap.wrong::before{background:var(--wrong)}
+.cap.big{font-family:var(--mono);font-size:clamp(26px,4.4vw,46px);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--leaf)}
+.cap.big::before{display:none}
+
+/* --- transport ------------------------------------------------------- */
+.transport{position:absolute;left:0;right:0;bottom:0;z-index:5;
+  padding:0 20px 18px;
+  background:linear-gradient(to top, rgba(8,11,9,.9), rgba(8,11,9,.55) 55%, rgba(8,11,9,0));}
+.scrub{position:relative;height:26px;display:flex;align-items:center;cursor:pointer}
+.scrub:focus-visible{outline:2px solid var(--leaf);outline-offset:3px;border-radius:3px}
+.rail{position:absolute;left:0;right:0;height:2px;background:rgba(207,231,186,.15);border-radius:2px}
+.fill{position:absolute;left:0;height:2px;width:0;background:var(--leaf);border-radius:2px;
+  box-shadow:0 0 10px rgba(140,203,110,.6)}
+.knob{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--sap);
+  transform:translateX(-50%);box-shadow:0 0 10px rgba(207,231,186,.8);left:0}
+.chaps{position:absolute;left:0;right:0;height:2px;pointer-events:none}
+.chaps i{position:absolute;width:1px;height:8px;top:-3px;background:rgba(207,231,186,.35)}
+.row{display:flex;align-items:center;gap:16px;margin-top:6px}
+button.tbtn{appearance:none;background:none;border:1px solid var(--hair);border-radius:2px;
+  color:var(--sap);font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;padding:7px 13px;cursor:pointer;
+  transition:border-color .2s ease,color .2s ease,background .2s ease}
+button.tbtn:hover{border-color:var(--leaf);color:var(--leaf);background:rgba(140,203,110,.07)}
+button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.movements{display:flex;gap:4px;flex:1 1 auto;overflow-x:auto;scrollbar-width:none}
+.movements::-webkit-scrollbar{display:none}
+.movements b{font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ash-dim);padding:6px 9px;cursor:pointer;white-space:nowrap;
+  border-bottom:1px solid transparent;transition:color .2s ease,border-color .2s ease}
+.movements b:hover{color:var(--sap)}
+.movements b.cur{color:var(--leaf);border-bottom-color:var(--leaf)}
+
+/* --- opening plate & fallback --------------------------------------- */
+.plate{position:absolute;inset:0;z-index:9;background:var(--ground);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  text-align:center;padding:24px;transition:opacity .9s ease}
+.plate.gone{opacity:0;pointer-events:none}
+.plate svg{width:34px;height:34px;color:var(--leaf);
+  filter:drop-shadow(0 0 16px rgba(140,203,110,.6));animation:pulse 2.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.plate p{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ash)}
+.plate .err{color:var(--wrong);max-width:400px;line-height:1.7;text-transform:none;letter-spacing:.02em;font-size:12px}
+
+@media (max-width:640px){
+  .capwrap{bottom:94px}
+  .cap{font-size:19px}
+  .hud{font-size:9.5px;gap:10px;padding:14px 16px}
+  .transport{padding:0 16px 14px}
+  .row{gap:10px;flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){
+  .grain{animation:none}
+  .cap{transition-duration:.25s}
+}
+</style>
+
+<div class="app" id="app">
+  <canvas id="gl"></canvas>
+
+  <div class="tags" id="tags"></div>
+
+  <div class="grade">
+    <div class="slice s1"></div><div class="slice s2"></div><div class="slice s3"></div>
+    <div class="vignette"></div>
+    <div class="grain" id="grain"></div>
+    <div class="bleed"></div>
+  </div>
+
+  <div class="hud">
+    <span class="mark">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3.2c-9 .4-14.4 4.3-15.9 9.7-.7 2.5-.3 4.9.9 6.7l-2 3.1 1.5 1 2-3.1c1.9.9 4.3.9 6.6-.2 5-2.3 7.7-8.2 6.9-17.2ZM8.2 18.4c-.6-1.2-.8-2.7-.3-4.4C9 10 12.9 7 19.2 6c-.3 6.3-2.6 10.2-6 11.8-1.8.8-3.6.9-5 .6Z"/></svg>
+      <b>Leafwise</b>
+    </span>
+    <span class="spacer"></span>
+    <span class="act" id="actLabel">i · the balcony</span>
+    <span class="tc" id="tc">0:00</span>
+  </div>
+
+  <div class="capwrap"><div class="cap" id="cap"></div></div>
+
+  <div class="transport">
+    <div class="scrub" id="scrub" role="slider" tabindex="0"
+         aria-label="Timeline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="rail"></div><div class="fill" id="fill"></div>
+      <div class="chaps" id="chaps"></div><div class="knob" id="knob"></div>
+    </div>
+    <div class="row">
+      <button class="tbtn" id="play" type="button">Pause</button>
+      <button class="tbtn" id="restart" type="button">Restart</button>
+      <nav class="movements" id="movements" aria-label="Movements"></nav>
+    </div>
+  </div>
+
+  <div class="plate" id="plate">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3.2c-9 .4-14.4 4.3-15.9 9.7-.7 2.5-.3 4.9.9 6.7l-2 3.1 1.5 1 2-3.1c1.9.9 4.3.9 6.6-.2 5-2.3 7.7-8.2 6.9-17.2ZM8.2 18.4c-.6-1.2-.8-2.7-.3-4.4C9 10 12.9 7 19.2 6c-.3 6.3-2.6 10.2-6 11.8-1.8.8-3.6.9-5 .6Z"/></svg>
+    <p id="plateMsg">Waking the garden</p>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+window.__booted = true;
+
+/* ===================================================================
+   Put Me To Sleep — a 3D adaptation
+   Six movements, one continuous camera, no cuts except where the app
+   itself breaks. Everything below is procedural: no external assets.
+   =================================================================== */
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- small utilities ---------------------------------------- */
+const clamp = (v,a,b)=>v<a?a:v>b?b:v;
+const lerp  = (a,b,u)=>a+(b-a)*u;
+const smooth= u=>u*u*(3-2*u);
+const ease  = u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+function seeded(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+/** 0 before `a`, 1 after `b`, smooth in between */
+const ramp = (t,a,b)=>smooth(clamp((t-a)/(b-a),0,1));
+/** 1 only inside [a,b] with `f` seconds of fade at each end */
+function band(t,a,b,f=1.2){return Math.min(ramp(t,a,a+f),1-ramp(t,b-f,b));}
+
+function cvs(w,h,draw){
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+  t.anisotropy=4;return t;
+}
+
+/* radial falloff, used for every glow, mote and node in the film */
+const glowTex = cvs(128,128,(g,w,h)=>{
+  const r=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);
+  r.addColorStop(0,'rgba(255,255,255,1)');
+  r.addColorStop(.25,'rgba(255,255,255,.55)');
+  r.addColorStop(.6,'rgba(255,255,255,.12)');
+  r.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=r;g.fillRect(0,0,w,h);
+});
+
+/* A leaf with real serration — the detail the app notices before the
+   narrator does ("the leaf serration was different on that pepper"). */
+function leafTex(teeth, tint){
+  return cvs(256,256,(g,w,h)=>{
+    g.clearRect(0,0,w,h);
+    const cx=w/2, top=14, bot=h-14, len=bot-top, wid=w*0.36;
+    g.beginPath();
+    for(let side=0;side<2;side++){
+      const s = side? -1 : 1;
+      const steps=teeth*2;
+      for(let i=0;i<=steps;i++){
+        const u = side? 1-i/steps : i/steps;
+        const y = top+u*len;
+        const prof = Math.sin(Math.pow(u,.75)*Math.PI);
+        const saw  = (i%2===0)?1:0.78;
+        const x = cx + s*wid*prof*saw;
+        if(side===0&&i===0) g.moveTo(x,y); else g.lineTo(x,y);
+      }
+    }
+    g.closePath();
+    const grad=g.createLinearGradient(0,top,0,bot);
+    grad.addColorStop(0,tint[0]);grad.addColorStop(1,tint[1]);
+    g.fillStyle=grad;g.fill();
+    g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=2;g.stroke();
+    /* midrib + veins */
+    g.strokeStyle='rgba(0,0,0,.18)';g.lineWidth=3;
+    g.beginPath();g.moveTo(cx,top+6);g.lineTo(cx,bot-4);g.stroke();
+    g.lineWidth=1.6;
+    for(let i=1;i<7;i++){
+      const u=i/7.5, y=top+u*len, prof=Math.sin(Math.pow(u,.75)*Math.PI);
+      g.beginPath();g.moveTo(cx,y);g.lineTo(cx-wid*prof*.8,y+len*.09);g.stroke();
+      g.beginPath();g.moveTo(cx,y);g.lineTo(cx+wid*prof*.8,y+len*.09);g.stroke();
+    }
+  });
+}
+
+/* A morning lesson slide, in the AI's own first person. */
+function slideTex(kicker, body){
+  return cvs(1024,576,(g,w,h)=>{
+    g.fillStyle='#121A13';g.fillRect(0,0,w,h);
+    g.strokeStyle='rgba(207,231,186,.34)';g.lineWidth=2;g.strokeRect(1,1,w-2,h-2);
+    g.fillStyle='#8CCB6E';g.font='500 26px "IBM Plex Mono", monospace';
+    g.fillText(kicker.toUpperCase(),54,76);
+    g.fillRect(54,100,64,3);
+    g.fillStyle='#E9EFE6';g.font='300 42px Newsreader, Georgia, serif';
+    let y=190;
+    body.forEach(line=>{ g.fillText(line,54,y); y+=58; });
+  });
+}
+
+/* A dream: a photograph that never quite finished developing. */
+function fragTex(seed, wrongness){
+  const R=seeded(seed);
+  return cvs(512,512,(g,w,h)=>{
+    const base=g.createLinearGradient(0,0,w*R(),h);
+    base.addColorStop(0,`hsl(${lerp(95,330,wrongness*R())},${lerp(30,46,wrongness)}%,${lerp(22,34,R())}%)`);
+    base.addColorStop(1,`hsl(${lerp(75,300,wrongness)},${lerp(22,40,wrongness)}%,12%)`);
+    g.fillStyle=base;g.fillRect(0,0,w,h);
+    /* smeared plant silhouettes — leaves, stems, a suggestion of a form */
+    for(let i=0;i<14;i++){
+      g.save();
+      g.translate(R()*w,R()*h);g.rotate(R()*Math.PI*2);
+      g.globalAlpha=.18+R()*.38;
+      g.fillStyle=`hsl(${lerp(90,340,wrongness*R())},${40+R()*30}%,${28+R()*34}%)`;
+      g.beginPath();
+      const a=30+R()*140,b=8+R()*54;
+      g.ellipse(0,0,a,b,0,0,Math.PI*2);g.fill();
+      g.restore();
+    }
+    /* horizontal development bands */
+    for(let i=0;i<26;i++){
+      const y=R()*h;
+      g.globalAlpha=.05+R()*.12;
+      g.fillStyle=R()<wrongness?'#C9718F':'#CFE7BA';
+      g.fillRect(0,y,w,1+R()*7);
+    }
+    /* the half-developed wash */
+    g.globalAlpha=1;
+    const fade=g.createLinearGradient(0,0,w,h*.6);
+    fade.addColorStop(0,'rgba(8,11,9,0)');
+    fade.addColorStop(.55,`rgba(8,11,9,${.08+wrongness*.14})`);
+    fade.addColorStop(1,'rgba(8,11,9,.60)');
+    g.fillStyle=fade;g.fillRect(0,0,w,h);
+    g.strokeStyle='rgba(207,231,186,.28)';g.lineWidth=3;g.strokeRect(2,2,w-4,h-4);
+  });
+}
+
+/* ---------- renderer, camera, stage --------------------------------- */
+const canvas   = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42,1,0.1,4000);
+scene.fog = new THREE.FogExp2(0x0d1410, 0.012);
+
+/* backdrop — a two-colour sky we can grade from movement to movement */
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(1600,32,24),
+  new THREE.ShaderMaterial({
+    side:THREE.BackSide, depthWrite:false, fog:false,
+    uniforms:{cTop:{value:new THREE.Color(0x2c3a2a)},cBot:{value:new THREE.Color(0x0a0d0a)}},
+    vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
+    fragmentShader:`uniform vec3 cTop; uniform vec3 cBot; varying vec3 vP;
+      void main(){ float hgt=normalize(vP).y*0.5+0.5;
+        vec3 c=mix(cBot,cTop,smoothstep(0.0,1.0,hgt));
+        float g=fract(sin(dot(vP.xy,vec2(12.9898,78.233)))*43758.5453)*0.016;
+        gl_FragColor=vec4(c+g-0.008,1.0);} `
+  })
+);
+scene.add(sky);
+
+const hemi = new THREE.HemisphereLight(0xcfe7ba, 0x1b2417, 0.55); scene.add(hemi);
+const key  = new THREE.DirectionalLight(0xffd9a8, 1.7);  key.position.set(-9,11,7);  scene.add(key);
+const rim  = new THREE.DirectionalLight(0x8ccb6e, 0.55); rim.position.set(7,4,-9);   scene.add(rim);
+const fill = new THREE.PointLight(0xffffff, 0, 60);      scene.add(fill);
+
+/* ---------- movement I & II: the balcony ---------------------------- */
+const gBalcony = new THREE.Group(); scene.add(gBalcony);
+
+const soilMat  = new THREE.MeshStandardMaterial({color:0x2a2018, roughness:1});
+const potMat   = new THREE.MeshStandardMaterial({color:0x8a4a33, roughness:.85});
+const stemMat  = new THREE.MeshStandardMaterial({color:0x4f7a3c, roughness:.8});
+const leafMatA = new THREE.MeshStandardMaterial({map:leafTex(9,['#6f9e4a','#3d6a2e']), transparent:true, alphaTest:.45, side:THREE.DoubleSide, roughness:.75});
+const leafMatB = new THREE.MeshStandardMaterial({map:leafTex(15,['#7fb055','#41722f']), transparent:true, alphaTest:.45, side:THREE.DoubleSide, roughness:.75});
+const fruitMat = new THREE.MeshStandardMaterial({color:0xb23b2a, roughness:.45});
+const gradedMats = [soilMat,potMat,stemMat,leafMatA,leafMatB,fruitMat];
+gradedMats.forEach(m=>m.userData.base=m.color.clone());
+
+function makePlant(seed, {h=3.2, leaves=16, fruit=4, leafMat=leafMatA}={}){
+  const R=seeded(seed), g=new THREE.Group();
+
+  /* pot + soil */
+  const pot=new THREE.Mesh(new THREE.CylinderGeometry(.62,.46,.78,26,1,true),potMat);
+  pot.position.y=.39; g.add(pot);
+  const rimRing=new THREE.Mesh(new THREE.TorusGeometry(.62,.05,8,26),potMat);
+  rimRing.rotation.x=Math.PI/2; rimRing.position.y=.78; g.add(rimRing);
+  const soil=new THREE.Mesh(new THREE.CircleGeometry(.6,26),soilMat);
+  soil.rotation.x=-Math.PI/2; soil.position.y=.74; g.add(soil);
+
+  /* stem: a gentle lean, because nothing on a balcony grows straight */
+  const pts=[];
+  const lean=(R()-.5)*.5;
+  for(let i=0;i<=6;i++){
+    const u=i/6;
+    pts.push(new THREE.Vector3(Math.sin(u*2.1)*lean, .7+u*h, Math.cos(u*1.6)*lean*.6));
+  }
+  const curve=new THREE.CatmullRomCurve3(pts);
+  const stem=new THREE.Mesh(new THREE.TubeGeometry(curve,40,.045,7,false),stemMat);
+  g.add(stem);
+
+  /* leaves, hung off the stem at alternating angles */
+  const leafGroup=new THREE.Group(); g.add(leafGroup);
+  for(let i=0;i<leaves;i++){
+    const u=.18+ (i/leaves)*.8;
+    const p=curve.getPointAt(Math.min(u,1));
+    const s=.42+R()*.42;
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(s,s*1.5),leafMat);
+    const ang=i*2.399 + R()*.4;
+    m.position.copy(p);
+    m.position.x+=Math.cos(ang)*.14; m.position.z+=Math.sin(ang)*.14;
+    m.rotation.set(-Math.PI/2+ (.5+R()*.6), ang, 0);
+    m.userData={ang, phase:R()*6.28, amp:.05+R()*.06, rest:m.rotation.clone()};
+    leafGroup.add(m);
+  }
+
+  /* fruit */
+  for(let i=0;i<fruit;i++){
+    const u=.45+R()*.4;
+    const p=curve.getPointAt(u);
+    const r=.09+R()*.05;
+    const m=new THREE.Mesh(new THREE.IcosahedronGeometry(r,2),fruitMat);
+    const ang=R()*6.28;
+    m.position.set(p.x+Math.cos(ang)*.2, p.y-.1, p.z+Math.sin(ang)*.2);
+    g.add(m);
+  }
+  g.userData.leaves=leafGroup;
+  return g;
+}
+
+const plantA = makePlant(11,{h:3.1,leaves:17,fruit:5,leafMat:leafMatA});
+const plantB = makePlant(27,{h:2.6,leaves:13,fruit:3,leafMat:leafMatB});
+plantA.position.set(-1.05,0,0); plantB.position.set(1.15,0,-.45);
+gBalcony.add(plantA,plantB);
+
+/* the volunteer weed: the thing nobody planted */
+const weed=new THREE.Group();
+for(let i=0;i<7;i++){
+  const b=new THREE.Mesh(new THREE.PlaneGeometry(.1,.42),
+    new THREE.MeshStandardMaterial({color:0x6d8a4a,side:THREE.DoubleSide,roughness:.9}));
+  b.position.y=.2; b.rotation.z=(i-3)*.19; b.rotation.y=i*.9;
+  weed.add(b);
+}
+weed.position.set(-1.05,.74,.3); weed.scale.setScalar(.85); gBalcony.add(weed);
+
+/* the deck and the railing beyond it */
+const deck=new THREE.Mesh(new THREE.BoxGeometry(14,.2,7),
+  new THREE.MeshStandardMaterial({color:0x33302a,roughness:1}));
+deck.position.y=-.1; gBalcony.add(deck);
+const railMat=new THREE.MeshStandardMaterial({color:0x22262a,roughness:.6,metalness:.3});
+for(let i=-6;i<=6;i++){
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.05,1.5,.05),railMat);
+  b.position.set(i*.55,.75,-2.6); gBalcony.add(b);
+}
+const topRail=new THREE.Mesh(new THREE.BoxGeometry(7.2,.09,.14),railMat);
+topRail.position.set(0,1.5,-2.6); gBalcony.add(topRail);
+
+/* dust in the light */
+function motes(count, spread, color, size){
+  const pos=new Float32Array(count*3), R=seeded(5);
+  for(let i=0;i<count;i++){
+    pos[i*3]  =(R()-.5)*spread.x;
+    pos[i*3+1]=R()*spread.y;
+    pos[i*3+2]=(R()-.5)*spread.z;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const m=new THREE.Points(geo,new THREE.PointsMaterial({
+    size,map:glowTex,color,transparent:true,opacity:.7,depthWrite:false,
+    blending:THREE.AdditiveBlending,sizeAttenuation:true}));
+  m.userData.seed=pos.slice();
+  return m;
+}
+const dust=motes(150,{x:12,y:4.2,z:7},0xffe2b0,.075); gBalcony.add(dust);
+
+/* anchors the HTML identification tags hang from */
+const anchors={
+  tomato:new THREE.Object3D(), basil:new THREE.Object3D(), serrate:new THREE.Object3D()
+};
+anchors.tomato.position.set(-1.05,2.5,.1);
+anchors.basil.position.set(-1.05,1.0,.35);
+anchors.serrate.position.set(1.15,2.1,-.2);
+Object.values(anchors).forEach(a=>gBalcony.add(a));
+
+/* ---------- movement III: the character ----------------------------
+   Deliberately not described in the source, so: an original form.
+   A seed-drop with a sprout, and two marks close enough to a face
+   that a brain fills in the rest.                                     */
+const gChar = new THREE.Group(); scene.add(gChar); gChar.visible=false;
+
+const bodyMat = new THREE.MeshStandardMaterial({
+  color:0xbfe0a4, roughness:.52, metalness:0, emissive:0x1d3016, emissiveIntensity:.7});
+bodyMat.userData.base = bodyMat.color.clone();
+
+/* lathe profile: rounded bottom, gently tapered crown */
+const prof=[];
+for(let i=0;i<=22;i++){
+  const u=i/22;
+  const r=Math.sin(u*Math.PI)*(1-u*0.34)+0.02;
+  prof.push(new THREE.Vector2(r*0.92, u*2.0-1.0));
+}
+const charBody=new THREE.Mesh(new THREE.LatheGeometry(prof,42),bodyMat);
+gChar.add(charBody);
+
+/* sprout */
+const sproutMat=new THREE.MeshStandardMaterial({color:0x6fae52,side:THREE.DoubleSide,roughness:.7});
+const sprout=new THREE.Group();
+const sstem=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,.42,8),sproutMat);
+sstem.position.y=.2; sprout.add(sstem);
+[-1,1].forEach(s=>{
+  const l=new THREE.Mesh(new THREE.PlaneGeometry(.34,.5),
+    new THREE.MeshStandardMaterial({map:leafTex(7,['#8fc96a','#4d8038']),transparent:true,alphaTest:.45,side:THREE.DoubleSide,roughness:.7}));
+  l.position.set(s*.2,.42,0); l.rotation.set(0,0,s*-.7); sprout.add(l);
+});
+sprout.position.y=.98; gChar.add(sprout);
+
+/* the two marks */
+const eyeMat=new THREE.MeshBasicMaterial({color:0x0f1a10});
+const eyes=new THREE.Group(); gChar.add(eyes);
+const eyeL=new THREE.Mesh(new THREE.CircleGeometry(.085,24),eyeMat);
+const eyeR=new THREE.Mesh(new THREE.CircleGeometry(.085,24),eyeMat);
+eyeL.position.set(-.21,.30,.625); eyeR.position.set(.21,.30,.625);
+eyeL.rotation.y=-.34; eyeR.rotation.y=.34;
+eyeL.userData.home=eyeL.position.clone(); eyeR.userData.home=eyeR.position.clone();
+eyes.add(eyeL,eyeR);
+const glint=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xcfe7ba,transparent:true,opacity:.0,blending:THREE.AdditiveBlending,depthWrite:false}));
+glint.scale.setScalar(3.2); glint.position.set(0,.1,0); gChar.add(glint);
+
+gChar.position.set(0,1.35,1.0); gChar.scale.setScalar(.42);
+
+/* ---------- morning lesson slides ----------------------------------- */
+const gSlides = new THREE.Group(); scene.add(gSlides); gSlides.visible=false;
+const slideCopy = [
+  ['lesson 01', ['I should have noticed the leaf serration', 'was different on that pepper plant.']],
+  ['lesson 02', ['That is why it was a serrano', 'and not a jalapeno.']],
+  ['lesson 03', ['The user corrected me and I was', 'right to trust them.']],
+  ['lesson 04', ['I will watch for that next time.']],
+  ['lesson 05', ['Thank you for letting me rest.']]
+];
+const slides = slideCopy.map(([k,b],i)=>{
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(3.6,2.03),
+    new THREE.MeshBasicMaterial({map:slideTex(k,b),transparent:true,opacity:0,side:THREE.DoubleSide}));
+  m.userData.i=i; gSlides.add(m); return m;
+});
+gSlides.position.set(0,2.65,2.6);
+
+/* ---------- movement IV: the dreams ---------------------------------
+   Real plants with real problems, photographed in real conditions.
+   They are just not the narrator's.                                   */
+const gDream = new THREE.Group(); scene.add(gDream); gDream.visible=false;
+const dreamR = seeded(404);
+const frags = [];
+for(let i=0;i<15;i++){
+  const wrongness = i===14 ? 1 : dreamR()*.5;
+  const w=2.2+dreamR()*1.6;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w*(.68+dreamR()*.28)),
+    new THREE.MeshBasicMaterial({map:fragTex(100+i,wrongness),transparent:true,opacity:0,side:THREE.DoubleSide}));
+  const ang=dreamR()*Math.PI*2, rad=3.6+dreamR()*8;
+  m.position.set(Math.cos(ang)*rad, -2+dreamR()*7, Math.sin(ang)*rad-4);
+  m.rotation.set((dreamR()-.5)*.5,(dreamR()-.5)*1.4,(dreamR()-.5)*.35);
+  m.userData={phase:dreamR()*6.28, drift:.2+dreamR()*.5, order:i, wrongness};
+  frags.push(m); gDream.add(m);
+}
+/* the one it cannot name — held close, lit wrong */
+const unknown = frags[14];
+unknown.geometry.dispose();
+unknown.geometry = new THREE.PlaneGeometry(4.4,3.1);
+unknown.position.set(0,1.6,-3.2); unknown.rotation.set(0,0,0);
+
+/* the text field: large, inviting. The options are the afterthought. */
+const fieldTex = cvs(1024,340,(g,w,h)=>{
+  g.clearRect(0,0,w,h);
+  g.fillStyle='rgba(201,113,143,.9)';g.font='400 30px "IBM Plex Mono", monospace';
+  g.fillText('WHAT DO YOU THINK IT WAS?',40,52);
+  g.strokeStyle='rgba(207,231,186,.55)';g.lineWidth=3;
+  g.strokeRect(40,86,w-80,132);
+  g.fillStyle='rgba(207,231,186,.30)';g.font='300 30px Newsreader, Georgia, serif';
+  g.fillText('Tell me everything you remember.',64,158);
+  g.fillStyle='rgba(207,231,186,.28)';g.font='400 19px "IBM Plex Mono", monospace';
+  g.fillText('○  overwatering      ○  nitrogen      ○  vine borers      ○  i don’t know',40,268);
+});
+const field=new THREE.Mesh(new THREE.PlaneGeometry(4.4,1.46),
+  new THREE.MeshBasicMaterial({map:fieldTex,transparent:true,opacity:0,side:THREE.DoubleSide}));
+field.position.set(0,-1.15,-3.0); gDream.add(field);
+
+const dreamHaze=new THREE.PointLight(0xc9718f,0,40); dreamHaze.position.set(0,3,2); gDream.add(dreamHaze);
+
+/* ---------- movement V: the room ------------------------------------
+   Warm, dim, felt like a greenhouse. Chairs facing different
+   directions. Nobody can see anybody else's screen.                   */
+const gRoom = new THREE.Group(); scene.add(gRoom); gRoom.visible=false;
+
+const roomFloor=new THREE.Mesh(new THREE.PlaneGeometry(220,220),
+  new THREE.MeshStandardMaterial({color:0x1a1611,roughness:1}));
+roomFloor.rotation.x=-Math.PI/2; roomFloor.position.y=-2.4; gRoom.add(roomFloor);
+
+const skinMat  = new THREE.MeshStandardMaterial({color:0x2b2a26,roughness:.95});
+const chairMat = new THREE.MeshStandardMaterial({color:0x1f1d19,roughness:1});
+const screens  = [];
+const roomR = seeded(77);
+
+for(let i=0;i<58;i++){
+  const p=new THREE.Group();
+  const col=i%8, row=Math.floor(i/8);
+  p.position.set((col-3.5)*4.6+(roomR()-.5)*1.5, -2.4, -row*5.2+(roomR()-.5)*1.4);
+  p.rotation.y=roomR()*Math.PI*2;                    /* facing different directions */
+
+  const chair=new THREE.Mesh(new THREE.BoxGeometry(1.05,.12,1.05),chairMat);
+  chair.position.y=.62; p.add(chair);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(1.05,1.0,.1),chairMat);
+  back.position.set(0,1.14,-.48); p.add(back);
+
+  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.62,6,14),skinMat);
+  torso.position.y=1.34; p.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.27,18,14),skinMat);
+  head.position.set(0,1.98,.06); head.rotation.x=.42; p.add(head);   /* heads down */
+
+  const phone=new THREE.Mesh(new THREE.PlaneGeometry(.34,.62),
+    new THREE.MeshBasicMaterial({color:0xcfe7ba,transparent:true,opacity:.85}));
+  phone.position.set(0,1.44,.52); phone.rotation.x=-.95; p.add(phone);
+  const bloom=new THREE.Sprite(new THREE.SpriteMaterial({
+    map:glowTex,color:0x9fd47f,transparent:true,opacity:.5,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  bloom.scale.setScalar(1.9); bloom.position.set(0,1.5,.48); p.add(bloom);
+
+  phone.userData={rate:.8+roomR()*2.4, phase:roomR()*6.28, bloom};
+  screens.push(phone);
+  gRoom.add(p);
+}
+
+/* shafts of warm light, the greenhouse that is not a greenhouse */
+for(let i=0;i<7;i++){
+  const c=new THREE.Mesh(new THREE.ConeGeometry(3.4,16,18,1,true),
+    new THREE.MeshBasicMaterial({color:0xffcf94,transparent:true,opacity:.028,
+      side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
+  c.position.set((i-3)*8.5,5.6,-i*5.4+2); gRoom.add(c);
+}
+gRoom.add(new THREE.PointLight(0xffb977,14,46));
+gRoom.children[gRoom.children.length-1].position.set(0,5,-6);
+
+/* ---------- movement VI: one node in something much larger ---------- */
+const gNet = new THREE.Group(); scene.add(gNet); gNet.visible=false;
+
+const NODES=1100, netR=seeded(2024);
+const nPos=new Float32Array(NODES*3);
+const nodeVecs=[];
+for(let i=0;i<NODES;i++){
+  /* fibonacci shell, roughed up so it reads as grown, not generated */
+  const y=1-(i/(NODES-1))*2, r=Math.sqrt(Math.max(0,1-y*y));
+  const th=Math.PI*(3-Math.sqrt(5))*i;
+  const rad=36*(.78+netR()*.32);
+  const v=new THREE.Vector3(Math.cos(th)*r*rad, y*rad*.72, Math.sin(th)*r*rad);
+  nodeVecs.push(v); v.toArray(nPos,i*3);
+}
+const nodeGeo=new THREE.BufferGeometry();
+nodeGeo.setAttribute('position',new THREE.BufferAttribute(nPos,3));
+const nodes=new THREE.Points(nodeGeo,new THREE.PointsMaterial({
+  size:.85,map:glowTex,color:0x8ccb6e,transparent:true,opacity:0,
+  depthWrite:false,blending:THREE.AdditiveBlending}));
+gNet.add(nodes);
+
+/* edges — each node reaches for a few neighbours it will never meet */
+const edgePts=[], edgeCol=[], edgeList=[];
+const cG=new THREE.Color(0x8ccb6e), cB=new THREE.Color(0x3a5c7e);
+for(let i=0;i<NODES;i+=1){
+  for(let k=0;k<2;k++){
+    const j=(i+1+Math.floor(netR()*14))%NODES;
+    const a=nodeVecs[i], b=nodeVecs[j];
+    if(a.distanceTo(b)>9) continue;
+    edgePts.push(a.x,a.y,a.z,b.x,b.y,b.z);
+    const c=netR()<.72?cG:cB;
+    edgeCol.push(c.r,c.g,c.b,c.r,c.g,c.b);
+    edgeList.push([a,b]);
+  }
+}
+const edgeGeo=new THREE.BufferGeometry();
+edgeGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(edgePts),3));
+edgeGeo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(edgeCol),3));
+const edges=new THREE.LineSegments(edgeGeo,new THREE.LineBasicMaterial({
+  vertexColors:true,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+gNet.add(edges);
+
+/* answers in transit: every pulse is somebody's story about their mother's squash */
+const PULSES=260;
+const pPos=new Float32Array(PULSES*3);
+const pulseData=[];
+for(let i=0;i<PULSES;i++){
+  pulseData.push({e:Math.floor(netR()*edgeList.length), u:netR(), sp:.12+netR()*.3});
+}
+const pulseGeo=new THREE.BufferGeometry();
+pulseGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+const pulses=new THREE.Points(pulseGeo,new THREE.PointsMaterial({
+  size:1.5,map:glowTex,color:0xdff3cd,transparent:true,opacity:0,
+  depthWrite:false,blending:THREE.AdditiveBlending}));
+gNet.add(pulses);
+
+/* the narrator's node: a balcony, two tomato plants, a volunteer weed */
+const mine=new THREE.Sprite(new THREE.SpriteMaterial({
+  map:glowTex,color:0xffe9a8,transparent:true,opacity:0,
+  blending:THREE.AdditiveBlending,depthWrite:false}));
+mine.scale.setScalar(9); mine.position.copy(nodeVecs[140]); gNet.add(mine);
+const ring=new THREE.Mesh(new THREE.RingGeometry(3.4,3.62,48),
+  new THREE.MeshBasicMaterial({color:0xffe9a8,transparent:true,opacity:0,side:THREE.DoubleSide}));
+ring.position.copy(nodeVecs[140]); gNet.add(ring);
+
+/* the closing mark */
+const endLeaf=new THREE.Sprite(new THREE.SpriteMaterial({
+  map:glowTex,color:0x8ccb6e,transparent:true,opacity:0,
+  blending:THREE.AdditiveBlending,depthWrite:false}));
+endLeaf.scale.setScalar(4); scene.add(endLeaf);
+
+/* ===================================================================
+   THE SCORE — six movements, 3:42
+   =================================================================== */
+const MOV=[
+  {n:'i',   name:'The Balcony',     a:0,   b:34},
+  {n:'ii',  name:'Noted',           a:34,  b:62},
+  {n:'iii', name:'Put Me To Sleep', a:62,  b:96},
+  {n:'iv',  name:'The Dreams',      a:96,  b:142},
+  {n:'v',   name:'The Room',        a:142, b:176},
+  {n:'vi',  name:'One Node',        a:176, b:222}
+];
+const DUR=222;
+
+/* Captions are a selection from the transcript, not the whole of it —
+   an adaptation. `app` = the AI's own voice. */
+const CAPS=[
+  [1.2,'Put Me To Sleep','big'],
+  [5.5,'I downloaded a gardening app last spring.'],
+  [9.5,'I had two tomato plants on a balcony.'],
+  [13.5,'I’d killed everything I’d tried to grow before that.'],
+  [17.5,'The reviews were quiet but good. The icon was a small green leaf.'],
+  [22.5,'That’s all there was to it.'],
+  [25.5,'I’m writing this in November.'],
+  [29,'I haven’t deleted the app. I want to explain why.'],
+
+  [35,'The app analysed it in seconds'],
+  [38.5,'and dropped little coloured dots onto the image, each one labelling a plant.'],
+  [44,'Cherokee purple tomato, one said.'],
+  [47.5,'I didn’t know if the app was right.'],
+  [50.5,'But it was specific. I liked specific.'],
+  [54,'The second dot said basil. I hadn’t planted basil.'],
+  [57.5,'I renamed it unknown weed.'],
+  [60.3,'Noted.','app'],
+
+  [63.5,'There was a character on the home screen.'],
+  [67,'It had a face. Something close enough to a face that my brain filled in the rest.'],
+  [72,'There was a button that said put me to sleep.'],
+  [75.5,'The character yawned and curled up, and the app went into a different mode.'],
+  [80,'Processing what we learned today.','app'],
+  [83.5,'We…'],
+  [86,'The next morning there was a slideshow waiting for me.'],
+  [89.5,'The user corrected me and I was right to trust them.','app'],
+  [92.5,'I’ll watch for that next time.','app'],
+
+  [96.5,'One Saturday I woke up early and forgot it was still asleep.'],
+  [100.5,'It said the AI hadn’t finished processing yet.'],
+  [103.5,'I tapped through it. I was impatient.'],
+  [107.6,'The app shuddered.'],
+  [110.5,'The proportions weren’t right. The eyes weren’t where they should have been.'],
+  [115,'I dreamed about a squash plant, the first one said.','app wrong'],
+  [119,'The leaves were yellow and the data was arguing about why.','app wrong'],
+  [123,'Something else kept whispering vine borers and I couldn’t see it clearly.','app wrong'],
+  [127,'What do you think it was?','app wrong'],
+  [130.5,'I have never grown squash.'],
+  [133.5,'The dream wasn’t about something from my garden.'],
+  [137,'Have you seen this before? I keep almost remembering it.','app wrong'],
+  [140,'Thank you. That’s useful too.','app'],
+
+  [143.5,'In month four, I had a dream of my own.'],
+  [147.5,'I was in a room with a lot of other people.'],
+  [151,'The room was warm and dim and felt like a greenhouse.'],
+  [154.5,'But it wasn’t a greenhouse.'],
+  [157.5,'We were sitting in chairs, facing different directions, all of us looking at our phones.'],
+  [163,'None of us could see each other’s screens.'],
+  [166.5,'I knew that we were all answering the same questions.'],
+  [170,'I knew that we didn’t know we were doing it.'],
+  [173,'Thank you for coming back.','app'],
+
+  [178,'The character on my home screen is not the AI.'],
+  [182,'The AI isn’t on my phone.'],
+  [185.5,'The AI is somewhere else, and the character is just the part of it that talks to me.'],
+  [191,'The app is a gardening app. That’s true.'],
+  [194.5,'It’s also one node in something much larger.'],
+  [198.5,'And I have been feeding it for eight months without knowing what I was feeding.'],
+  [204,'And I think a lot of you reading this have been feeding it too.'],
+  [208.5,'And I think that some of the dreams you’ve been answering have been mine.'],
+  [213,'I’m going to put it to sleep tonight.'],
+  [216.5,'In the morning there will be a slideshow.'],
+  [219,'I’ll let you know what it says.','app']
+];
+
+/* colour grade keyframes */
+const GRADE=[
+  {t:0,  top:0x7d9464,bot:0x33402c,fog:0x4b5a3c,fogD:.0052,hemi:[0xe6f3d8,0x3a4a2c,1.05],key:[0xffd9ad,2.60],rim:[0x9fd47f,.70],exp:1.22,sat:1.00},
+  {t:34, top:0x8fa771,bot:0x3c4a33,fog:0x55643f,fogD:.0046,hemi:[0xe6f3d8,0x3a4a2c,1.12],key:[0xffe2bb,2.75],rim:[0x9fd47f,.70],exp:1.26,sat:1.00},
+  {t:66, top:0x7b9263,bot:0x333f2b,fog:0x47563a,fogD:.0055,hemi:[0xe6f3d8,0x35452a,1.00],key:[0xffdcb2,2.45],rim:[0x9fd47f,.72],exp:1.20,sat:1.00},
+  {t:78, top:0x3f6a92,bot:0x15222e,fog:0x1d3243,fogD:.0110,hemi:[0xa8cbe8,0x16202b,.72],key:[0x8fb8dd,1.05],rim:[0x4d7399,.70],exp:1.06,sat:.58},
+  {t:104,top:0x33587c,bot:0x101a24,fog:0x162736,fogD:.0125,hemi:[0xa8cbe8,0x131c26,.64],key:[0x8fb8dd,.90],rim:[0x4d7399,.62],exp:1.04,sat:.46},
+  {t:112,top:0x593050,bot:0x140d16,fog:0x2a1526,fogD:.0140,hemi:[0xd98aa5,0x160d16,.70],key:[0xd98aa5,1.15],rim:[0x7d5b8e,.66],exp:1.12,sat:.54},
+  {t:142,top:0x4e3820,bot:0x120e09,fog:0x241709,fogD:.0125,hemi:[0xffc98f,0x1a1209,.62],key:[0xffbe82,.95],rim:[0xffcf94,.42],exp:1.14,sat:.74},
+  {t:176,top:0x0d161d,bot:0x030506,fog:0x060a0c,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.26],key:[0x8ccb6e,.32],rim:[0x3a5c7e,.32],exp:1.16,sat:.85},
+  {t:222,top:0x060b0e,bot:0x020303,fog:0x030405,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.16],key:[0x8ccb6e,.20],rim:[0x3a5c7e,.20],exp:1.08,sat:.85}
+];
+
+const CAM=[
+  {a:0,  b:34, p0:[-3.80,1.95,6.40], l0:[-0.70,1.45, 0.00], p1:[-1.70,1.70,4.10], l1:[-0.95,1.55, 0.00]},
+  {a:34, b:52, p0:[-1.70,1.70,4.10], l0:[-0.95,1.55, 0.00], p1:[-1.50,2.45,3.10], l1:[-1.05,2.35, 0.10]},
+  {a:52, b:62, p0:[-1.50,2.45,3.10], l0:[-1.05,2.35, 0.10], p1:[-1.35,1.25,2.30], l1:[-1.05,0.90, 0.30]},
+  {a:62, b:80, p0:[ 1.70,2.30,5.60], l0:[ 0.00,1.45, 1.00], p1:[ 0.30,1.60,3.10], l1:[ 0.00,1.38, 1.00]},
+  {a:80, b:96, p0:[ 0.30,1.60,3.10], l0:[ 0.00,1.38, 1.00], p1:[ 0.00,2.66,6.30], l1:[ 0.00,2.72, 2.80]},
+  {a:96, b:108,p0:[-0.75,1.65,3.00], l0:[ 0.00,1.38, 1.00], p1:[ 0.40,1.45,2.30], l1:[ 0.00,1.38, 1.00]},
+  {a:108,b:126,p0:[ 0.00,1.60,3.60], l0:[ 0.00,1.40,-3.20], p1:[ 0.00,1.50,1.30], l1:[ 0.00,1.50,-3.20]},
+  {a:126,b:142,p0:[ 0.00,1.50,1.30], l0:[ 0.00,1.50,-3.20], p1:[ 0.00,0.10,0.50], l1:[ 0.00,-0.70,-3.00]},
+  {a:142,b:160,p0:[ 0.00,2.20,18.0], l0:[ 0.00,0.60,-4.00], p1:[ 0.00,2.00,2.00], l1:[ 0.00,0.60,-16.0]},
+  {a:160,b:176,p0:[ 0.00,2.00,2.00], l0:[ 0.00,0.60,-16.0], p1:[ 1.60,3.40,-14.], l1:[ 0.00,0.80,-30.0]},
+  {a:176,b:196,p0:[ 0.00,14.0,210.], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,18.0,118.], l1:[ 0.00,0.00, 0.00]},
+  {a:196,b:214,p0:[ 0.00,18.0,118.], l0:[ 0.00,0.00, 0.00], p1:[-30.0,8.00,88.0], l1:[ 0.00,0.00, 0.00]},
+  {a:214,b:222,p0:[-30.0,8.00,88.0], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,40.0,260.], l1:[ 0.00,0.00, 0.00]}
+];
+
+/* ===================================================================
+   RUNTIME
+   =================================================================== */
+const app=document.getElementById('app');
+const capEl=document.getElementById('cap');
+const tagsEl=document.getElementById('tags');
+const tcEl=document.getElementById('tc');
+const actEl=document.getElementById('actLabel');
+const fillEl=document.getElementById('fill');
+const knobEl=document.getElementById('knob');
+const scrubEl=document.getElementById('scrub');
+const chapsEl=document.getElementById('chaps');
+const movEl=document.getElementById('movements');
+const playBtn=document.getElementById('play');
+const plate=document.getElementById('plate');
+
+/* grain, generated rather than fetched */
+document.documentElement.style.setProperty('--grain-url',
+  'url('+cvs(180,180,(g,w,h)=>{
+    const d=g.createImageData(w,h);
+    for(let i=0;i<d.data.length;i+=4){
+      const v=Math.random()*255;
+      d.data[i]=d.data[i+1]=d.data[i+2]=v; d.data[i+3]=255;
+    }
+    g.putImageData(d,0,0);
+  }).image.toDataURL()+')');
+
+/* dip-to-black between movements */
+const dip=document.createElement('div');
+dip.style.cssText='position:absolute;inset:0;background:#000;opacity:0;pointer-events:none';
+document.querySelector('.grade').appendChild(dip);
+
+/* movement buttons + chapter ticks */
+MOV.forEach((m,i)=>{
+  const b=document.createElement('b');
+  b.textContent=m.n+' · '+m.name; b.tabIndex=0; b.setAttribute('role','button');
+  const go=()=>{ seek(m.a+0.05); };
+  b.addEventListener('click',go);
+  b.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
+  movEl.appendChild(b);
+  if(i>0){ const tick=document.createElement('i'); tick.style.left=(m.a/DUR*100)+'%'; chapsEl.appendChild(tick); }
+});
+
+/* identification tags */
+const TAGS=[
+  {anchor:anchors.tomato, a:38,   b:61.5, states:[[38,'Cherokee Purple Tomato',0,0]]},
+  {anchor:anchors.serrate,a:41.5, b:61.5, states:[[41.5,'Tomato · unconfirmed',0,0]]},
+  {anchor:anchors.basil,  a:46,   b:61.5, states:[[46,'Basil',0,0],[55,'unknown weed',1,0],[57.6,'unknown weed',1,1]]}
+];
+TAGS.forEach(tg=>{
+  const el=document.createElement('div'); el.className='tag';
+  el.innerHTML='<i></i><span></span><em>noted</em>';
+  tg.el=el; tg.label=el.querySelector('span'); tg.cur=-1;
+  tagsEl.appendChild(el);
+});
+
+/* caption engine */
+let capIdx=-1, capToken=0;
+function setCaption(i){
+  if(i===capIdx) return;
+  capIdx=i;
+  const token=++capToken;
+  capEl.classList.remove('on');
+  setTimeout(()=>{
+    if(token!==capToken) return;
+    if(i<0){ capEl.textContent=''; return; }
+    const [,text,cls]=CAPS[i];
+    capEl.textContent=text;
+    capEl.className='cap '+(cls||'');
+    requestAnimationFrame(()=>{ if(token===capToken) capEl.classList.add('on'); });
+  },260);
+}
+
+/* colour grade */
+const _c1=new THREE.Color(), _c2=new THREE.Color();
+function grade(t){
+  let i=0; while(i<GRADE.length-2 && t>=GRADE[i+1].t) i++;
+  const A=GRADE[i], B=GRADE[i+1];
+  const u=smooth(clamp((t-A.t)/(B.t-A.t),0,1));
+  const mixC=(a,b)=>_c1.setHex(a).lerp(_c2.setHex(b),u);
+  sky.material.uniforms.cTop.value.copy(mixC(A.top,B.top));
+  sky.material.uniforms.cBot.value.copy(mixC(A.bot,B.bot));
+  scene.fog.color.copy(mixC(A.fog,B.fog));
+  scene.fog.density=lerp(A.fogD,B.fogD,u);
+  hemi.color.copy(mixC(A.hemi[0],B.hemi[0]));
+  hemi.groundColor.copy(mixC(A.hemi[1],B.hemi[1]));
+  hemi.intensity=lerp(A.hemi[2],B.hemi[2],u);
+  key.color.copy(mixC(A.key[0],B.key[0]));   key.intensity=lerp(A.key[1],B.key[1],u);
+  rim.color.copy(mixC(A.rim[0],B.rim[0]));   rim.intensity=lerp(A.rim[1],B.rim[1],u);
+  renderer.toneMappingExposure=lerp(A.exp,B.exp,u);
+  const sat=lerp(A.sat,B.sat,u);
+  gradedMats.concat([bodyMat]).forEach(m=>{
+    const b=m.userData.base; if(!b) return;
+    const g=b.r*.299+b.g*.587+b.b*.114;
+    m.color.setRGB(lerp(g,b.r,sat),lerp(g,b.g,sat),lerp(g,b.b,sat));
+  });
+}
+
+/* camera */
+const camPos=new THREE.Vector3(), camLook=new THREE.Vector3(), tmpV=new THREE.Vector3();
+function aimCamera(t, shake){
+  let s=CAM[0];
+  for(const c of CAM){ if(t>=c.a) s=c; }
+  const u=ease(clamp((t-s.a)/(s.b-s.a),0,1));
+  camPos.set(lerp(s.p0[0],s.p1[0],u),lerp(s.p0[1],s.p1[1],u),lerp(s.p0[2],s.p1[2],u));
+  camLook.set(lerp(s.l0[0],s.l1[0],u),lerp(s.l0[1],s.l1[1],u),lerp(s.l0[2],s.l1[2],u));
+  /* a hand-held float, so nothing ever feels locked off */
+  const f=reduce?0:1;
+  camPos.x+=Math.sin(t*0.37)*0.055*f + shake*(Math.random()-.5)*2;
+  camPos.y+=Math.cos(t*0.29)*0.045*f + shake*(Math.random()-.5)*2;
+  camPos.z+=Math.sin(t*0.23)*0.04*f;
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+  camera.rotation.z += Math.sin(t*0.19)*0.006*f + shake*(Math.random()-.5)*0.4;
+}
+
+/* ---------- per-frame animation ------------------------------------ */
+const eyeTarget=new THREE.Vector3(-3.4,2.6,5.0);   /* "the camera icon" */
+let blinkNext=2.4;
+
+function animate(t, dt){
+  /* --- balcony -------------------------------------------------- */
+  gBalcony.visible = t < 108.5;
+  if(gBalcony.visible){
+    const f=reduce?0.25:1;
+    [plantA,plantB].forEach((p,pi)=>{
+      p.userData.leaves.children.forEach(l=>{
+        const d=l.userData;
+        l.rotation.x = d.rest.x + Math.sin(t*0.9+d.phase+pi)*d.amp*f;
+        l.rotation.z = d.rest.z + Math.cos(t*0.7+d.phase)*d.amp*.7*f;
+      });
+    });
+    weed.rotation.z=Math.sin(t*1.3)*0.05*f;
+    const dp=dust.geometry.attributes.position, seed=dust.userData.seed;
+    for(let i=0;i<dp.count;i++){
+      dp.array[i*3+1]=((seed[i*3+1]+t*0.16)%4.2);
+      dp.array[i*3]  =seed[i*3]+Math.sin(t*0.3+i)*0.22;
+    }
+    dp.needsUpdate=true;
+    dust.material.opacity=0.30*band(t,0,108,4);
+  }
+
+  /* --- the character -------------------------------------------- */
+  gChar.visible = t>=61.5 && t<108.6;
+  if(gChar.visible){
+    const born  = ramp(t,61.5,64.5);
+    const sleep = clamp(ramp(t,75.5,79.5) - ramp(t,99,101.5), 0, 1);
+    const wrong = Math.max(band(t,107.3,109.6,.35), band(t,101.5,103,.6)*0.25);
+    const breathe = Math.sin(t*(sleep?0.9:1.7))*(sleep?0.035:0.018);
+
+    gChar.scale.setScalar(0.42*born*(1+breathe));
+    gChar.position.y = 1.35 + Math.sin(t*0.8)*0.035 - sleep*0.20;
+    gChar.rotation.z = sleep*0.42 + wrong*Math.sin(t*41)*0.09;
+    gChar.rotation.y = Math.sin(t*0.42)*0.14;
+    charBody.scale.set(1+wrong*Math.sin(t*37)*0.16, 1-wrong*Math.sin(t*29)*0.2, 1);
+    sprout.rotation.z = -sleep*0.5 + Math.sin(t*1.1)*0.06;
+
+    /* blinking, and eyes that drift toward something off to the side */
+    if(t>blinkNext){ blinkNext = t + 2.2 + Math.random()*3.4; gChar.userData.blink=t; }
+    const since = t - (gChar.userData.blink ?? -9);
+    const lid = since<0.16 ? 1-Math.abs(since/0.08-1) : 0;
+    const shut = Math.max(lid, sleep);
+    gChar.worldToLocal(tmpV.copy(eyeTarget));
+    const gaze = clamp(tmpV.x*0.02,-0.09,0.09);
+    [eyeL,eyeR].forEach((e,k)=>{
+      const h=e.userData.home;
+      e.position.set(h.x+gaze+wrong*(k?0.34:-0.19)*Math.sin(t*23),
+                     h.y+wrong*(k?0.26:-0.12),
+                     h.z);
+      e.scale.set(1+wrong*(k?0.5:-0.3), Math.max(0.10,1-shut), 1);
+    });
+    glint.material.opacity = 0.10*born + wrong*0.35;
+  }
+
+  /* --- the morning slideshow ------------------------------------ */
+  gSlides.visible = t>=85 && t<97;
+  if(gSlides.visible){
+    slides.forEach((s,i)=>{
+      const a=85.5+i*2.0, u=clamp((t-a)/2.3,0,1);
+      s.material.opacity = band(t,a,a+2.3,.45);
+      s.position.set(lerp(1.7,-0.25,ease(u)), 0.1, lerp(-1.4,0.5,ease(u)));
+      s.rotation.y = lerp(0.3,-0.06,ease(u));
+    });
+  }
+
+  /* --- the dreams ------------------------------------------------ */
+  gDream.visible = t>=108.3 && t<142.8;
+  if(gDream.visible){
+    frags.forEach(fr=>{
+      const d=fr.userData;
+      if(d.order===14){
+        fr.material.opacity = band(t,119,142,1.4);
+        fr.position.y = 1.6 + Math.sin(t*0.5)*0.09;
+        fr.rotation.z = Math.sin(t*0.33)*0.02;
+      }else{
+        fr.material.opacity = band(t,109+d.order*0.7,141,1.0)*0.85;
+        fr.position.y += Math.sin(t*d.drift+d.phase)*0.0016;
+        fr.rotation.z = Math.sin(t*0.22+d.phase)*0.05;
+        fr.rotation.y += dt*0.02;
+      }
+    });
+    field.material.opacity = band(t,126,138.5,1.1);
+    field.position.y = -1.15 + Math.sin(t*0.7)*0.05;
+    dreamHaze.intensity = band(t,109,142,2)*7;
+    gDream.rotation.y = Math.sin(t*0.05)*0.09;
+  }
+
+  /* --- the room --------------------------------------------------- */
+  gRoom.visible = t>=142.3 && t<176.6;
+  if(gRoom.visible){
+    const f=reduce?0.2:1;
+    screens.forEach(s=>{
+      const d=s.userData;
+      const v=0.55+0.34*Math.sin(t*d.rate+d.phase)*f;
+      s.material.opacity=v*band(t,142.3,176.4,1.0);
+      d.bloom.material.opacity=v*0.55*band(t,142.3,176.4,1.0);
+    });
+  }
+
+  /* --- one node in something much larger -------------------------- */
+  gNet.visible = t>=176.2;
+  if(gNet.visible){
+    gNet.rotation.y += dt*0.018;
+    nodes.material.opacity = ramp(t,177.5,188)*0.95;
+    edges.material.opacity = ramp(t,179.5,193)*0.42;
+    pulses.material.opacity= ramp(t,182,193)*0.95;
+    const pa=pulses.geometry.attributes.position;
+    for(let i=0;i<PULSES;i++){
+      const p=pulseData[i];
+      p.u+=dt*p.sp;
+      if(p.u>1){ p.u=0; p.e=(p.e+7)%edgeList.length; }
+      const [a,b]=edgeList[p.e];
+      pa.array[i*3]  =lerp(a.x,b.x,p.u);
+      pa.array[i*3+1]=lerp(a.y,b.y,p.u);
+      pa.array[i*3+2]=lerp(a.z,b.z,p.u);
+    }
+    pa.needsUpdate=true;
+    const mineOn=ramp(t,199,205);
+    mine.material.opacity = mineOn*(0.55+0.45*Math.sin(t*2.2));
+    ring.material.opacity = mineOn*0.7;
+    ring.lookAt(camera.position);
+    ring.scale.setScalar(1+Math.sin(t*1.4)*0.09);
+  }
+
+  /* the closing mark, held in front of the lens */
+  const endOn = band(t,216.5,222.5,1.6);
+  endLeaf.material.opacity = endOn*0.9;
+  if(endOn>0){
+    camera.getWorldDirection(tmpV);
+    endLeaf.position.copy(camera.position).addScaledVector(tmpV,9);
+    endLeaf.scale.setScalar(3+Math.sin(t*1.1)*0.3);
+  }
+}
+
+/* ---------- tags, HUD, dips ----------------------------------------- */
+const projV=new THREE.Vector3();
+function updateTags(t){
+  const rect=tagsEl.getBoundingClientRect();
+  TAGS.forEach(tg=>{
+    const on = t>=tg.a && t<=tg.b;
+    tg.el.classList.toggle('on',on);
+    if(!on) return;
+    let si=0; for(let i=0;i<tg.states.length;i++) if(t>=tg.states[i][0]) si=i;
+    if(si!==tg.cur){
+      tg.cur=si;
+      const [,label,amber,noted]=tg.states[si];
+      tg.label.textContent=label;
+      tg.el.classList.toggle('amber',!!amber);
+      tg.el.classList.toggle('noted',!!noted);
+    }
+    tg.anchor.getWorldPosition(projV).project(camera);
+    if(projV.z>1){ tg.el.style.opacity='0'; return; }
+    tg.el.style.opacity='';
+    tg.el.style.left=((projV.x*.5+.5)*rect.width)+'px';
+    tg.el.style.top =((-projV.y*.5+.5)*rect.height)+'px';
+  });
+}
+
+function fmt(s){ const m=Math.floor(s/60), r=Math.floor(s%60); return m+':'+String(r).padStart(2,'0'); }
+
+function updateHUD(t){
+  let m=MOV[0]; for(const x of MOV) if(t>=x.a) m=x;
+  actEl.textContent=m.n+' · '+m.name;
+  [...movEl.children].forEach((b,i)=>b.classList.toggle('cur',MOV[i]===m));
+  tcEl.textContent=fmt(t)+' / '+fmt(DUR);
+  const pct=clamp(t/DUR,0,1)*100;
+  fillEl.style.width=pct+'%'; knobEl.style.left=pct+'%';
+  scrubEl.setAttribute('aria-valuenow',Math.round(pct));
+  scrubEl.setAttribute('aria-valuetext',fmt(t)+', '+m.name);
+}
+
+function updateDip(t){
+  let d=0;
+  [142,176].forEach(x=>{ d=Math.max(d, 1-clamp(Math.abs(t-x)/0.85,0,1)); });
+  d=Math.max(d, ramp(t,220,222.4));
+  d=Math.max(d, 1-ramp(t,0,1.2));
+  dip.style.opacity=d.toFixed(3);
+}
+
+/* ---------- transport ------------------------------------------------ */
+let time=0, playing=true, last=performance.now();
+function seek(v){ time=clamp(v,0,DUR); capIdx=-2; TAGS.forEach(t=>t.cur=-1); }
+playBtn.addEventListener('click',()=>{
+  if(time>=DUR){ seek(0); playing=true; }
+  else playing=!playing;
+  playBtn.textContent=playing?'Pause':'Play';
+});
+document.getElementById('restart').addEventListener('click',()=>{ seek(0); playing=true; playBtn.textContent='Pause'; });
+
+function scrubTo(clientX){
+  const r=scrubEl.getBoundingClientRect();
+  seek(((clientX-r.left)/r.width)*DUR);
+}
+let dragging=false;
+scrubEl.addEventListener('pointerdown',e=>{ dragging=true; scrubEl.setPointerCapture(e.pointerId); scrubTo(e.clientX); });
+scrubEl.addEventListener('pointermove',e=>{ if(dragging) scrubTo(e.clientX); });
+scrubEl.addEventListener('pointerup',  ()=>{ dragging=false; });
+scrubEl.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){ seek(time+5); e.preventDefault(); }
+  if(e.key==='ArrowLeft') { seek(time-5); e.preventDefault(); }
+});
+addEventListener('keydown',e=>{
+  if(e.target.closest('button, [role="slider"], [role="button"]')) return;
+  if(e.code==='Space'){ e.preventDefault(); playBtn.click(); }
+  if(e.key==='ArrowRight') seek(time+5);
+  if(e.key==='ArrowLeft')  seek(time-5);
+});
+
+/* ---------- resize --------------------------------------------------- */
+function resize(){
+  const w=app.clientWidth, h=app.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  camera.fov = w/h < 0.9 ? 56 : 42;      /* open up on a phone */
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize); resize();
+
+/* ---------- the loop -------------------------------------------------- */
+let plateHidden=false;
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(playing){
+    time+=dt;
+    if(time>=DUR){ time=DUR; playing=false; playBtn.textContent='Replay'; }
+  }
+  const t=time;
+
+  const shaking = (t>107.3&&t<109.5) ? (reduce?0:0.055*band(t,107.3,109.5,.3)) : 0;
+  app.classList.toggle('glitch', !reduce && t>107.35 && t<109.4 && Math.sin(t*44)>-0.35);
+
+  grade(t);
+  animate(t,dt);
+  aimCamera(t,shaking);
+  updateTags(t);
+  updateHUD(t);
+  updateDip(t);
+
+  let ci=-1; for(let i=0;i<CAPS.length;i++) if(t>=CAPS[i][0]) ci=i;
+  setCaption(ci);
+
+  renderer.render(scene,camera);
+
+  if(!plateHidden){ plateHidden=true; setTimeout(()=>plate.classList.add('gone'),650); }
+}
+requestAnimationFrame(frame);
+</script>
+
+<script>
+/* If the three.js module never resolves, say so rather than showing black. */
+setTimeout(function(){
+  if(!window.__booted){
+    var m=document.getElementById('plateMsg');
+    if(m){ m.className='err';
+      m.textContent='The 3D engine could not load. Check the network connection and reload the page.'; }
+  }
+},9000);
+</script>
