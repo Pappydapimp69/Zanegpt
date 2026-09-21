@@ -58,10 +58,16 @@ exists at all the gate never engages.
 | ii | Noted | 0:34 |
 | iii | Put Me To Sleep | 1:02 |
 | iv | The Dreams | 1:36 |
-| v | The Room | 2:22 |
+| v | The Room | 2:34 |
 | vi | One Node | 2:56 |
 
 Total runtime 4:12.
+
+The room is the narrator's *own* dream, not the app's, so it does not appear
+until the line that says so — "in month four, I had a dream of my own" at
+2:34. The reflection before it ("what is it useful for", "the questions
+weren't about my garden anymore") plays over the app's dreams receding, which
+is what those lines are about.
 
 ## Holds
 

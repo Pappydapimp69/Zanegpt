@@ -885,8 +885,8 @@ const MOV=[
   {n:'i',   name:'The Balcony',     a:0,   b:34},
   {n:'ii',  name:'Noted',           a:34,  b:62},
   {n:'iii', name:'Put Me To Sleep', a:62,  b:96},
-  {n:'iv',  name:'The Dreams',      a:96,  b:142},
-  {n:'v',   name:'The Room',        a:142, b:176},
+  {n:'iv',  name:'The Dreams',      a:96,  b:153.5},
+  {n:'v',   name:'The Room',        a:153.5, b:176},
   {n:'vi',  name:'One Node',        a:176, b:252}
 ];
 const DUR=252;
@@ -984,7 +984,8 @@ const GRADE=[
   {t:78, top:0x2c4c6b,bot:0x0d1620,fog:0x14222f,fogD:.0150,hemi:[0x9cbfdd,0x101822,.50],key:[0x86b0d6,.80],rim:[0x4d7399,.55],exp:0.96,sat:.55},
   {t:104,top:0x24405c,bot:0x0a121a,fog:0x101c28,fogD:.0165,hemi:[0x9cbfdd,0x0d141c,.44],key:[0x86b0d6,.68],rim:[0x4d7399,.50],exp:0.94,sat:.44},
   {t:112,top:0x5c3252,bot:0x160f19,fog:0x2a1730,fogD:.0150,hemi:[0xd98aa5,0x160f18,.70],key:[0xd98aa5,1.18],rim:[0x8a65a0,.66],exp:1.10,sat:.56},
-  {t:142,top:0x2a1d0c,bot:0x090704,fog:0x110a04,fogD:.0205,hemi:[0xffb877,0x0c0805,.30],key:[0xffb474,.52],rim:[0xffcf94,.26],exp:0.88,sat:.74},
+  {t:145,top:0x2a2438,bot:0x0a0810,fog:0x140f1c,fogD:.0170,hemi:[0x9f8fb8,0x0c0a12,.48],key:[0x9f8fb8,.70],rim:[0x6a5b8e,.44],exp:1.00,sat:.60},
+  {t:153.5,top:0x2a1d0c,bot:0x090704,fog:0x110a04,fogD:.0205,hemi:[0xffb877,0x0c0805,.30],key:[0xffb474,.52],rim:[0xffcf94,.26],exp:0.88,sat:.74},
   {t:176,top:0x0f1a23,bot:0x040607,fog:0x070c0f,fogD:.0032,hemi:[0x8ccb6e,0x030609,.34],key:[0x8ccb6e,.46],rim:[0x5a8cbe,.40],exp:1.16,sat:.85},
   {t:252,top:0x060b0e,bot:0x020303,fog:0x030405,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.16],key:[0x8ccb6e,.20],rim:[0x3a5c7e,.20],exp:1.08,sat:.85}
 ];
@@ -1019,8 +1020,9 @@ const CAM=[
   {a:96, b:108,p0:[-0.75,1.65,3.00], l0:[ 0.00,1.38, 1.00], p1:[ 0.40,1.45,2.30], l1:[ 0.00,1.38, 1.00]},
   {a:108,b:126,p0:[ 0.00,1.60,3.60], l0:[ 0.00,1.40,-3.20], p1:[ 0.00,1.50,1.30], l1:[ 0.00,1.50,-3.20]},
   {a:126,b:142,p0:[ 0.00,1.50,1.30], l0:[ 0.00,1.50,-3.20], p1:[ 0.00,-0.30,1.90], l1:[ 0.00,-1.00,-3.00]},
-  {a:142,b:160,p0:[ 0.00,2.20,18.0], l0:[ 0.00,0.60,-4.00], p1:[ 0.00,2.00,2.00], l1:[ 0.00,0.60,-16.0]},
-  {a:160,b:176,p0:[ 0.00,2.00,2.00], l0:[ 0.00,0.60,-16.0], p1:[ 1.60,3.40,-14.], l1:[ 0.00,0.80,-30.0]},
+  {a:142,b:153.5,p0:[0.00,-0.30,1.90], l0:[ 0.00,-1.00,-3.00],p1:[ 0.00,1.40,7.00], l1:[ 0.00,0.30,-3.20]},
+  {a:153.5,b:167,p0:[ 0.00,2.20,18.0], l0:[ 0.00,0.60,-4.00], p1:[ 0.00,2.00,2.00], l1:[ 0.00,0.60,-16.0]},
+  {a:167,b:176,p0:[ 0.00,2.00,2.00], l0:[ 0.00,0.60,-16.0], p1:[ 1.60,3.40,-14.], l1:[ 0.00,0.80,-30.0]},
   {a:176,b:206,p0:[ 0.00,14.0,210.], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,18.0,118.], l1:[ 0.00,0.00, 0.00]},
   {a:206,b:232,p0:[ 0.00,18.0,118.], l0:[ 0.00,0.00, 0.00], p1:[-30.0,8.00,88.0], l1:[ 0.00,0.00, 0.00]},
   {a:232,b:252,p0:[-30.0,8.00,88.0], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,40.0,260.], l1:[ 0.00,0.00, 0.00]}
@@ -1168,7 +1170,7 @@ const Sound = (function(){
     [75.8,'sleep'],[86.0,'slide'],[88.0,'slide'],[90.0,'slide'],[92.0,'slide'],[94.0,'slide'],
     [100.6,'tap'],[103.8,'tap'],[107.45,'shudder'],
     [115.0,'shimmer'],[127.0,'shimmer'],[137.0,'shimmer'],
-    [143.0,'swell'],[173.0,'chime'],[176.3,'swell'],[139.2,'noted'],[236.0,'chime'],[248.0,'noted']
+    [154.0,'swell'],[173.0,'chime'],[176.3,'swell'],[139.2,'noted'],[236.0,'chime'],[248.0,'noted']
   ];
 
   /* ---- the score proper: one entry per section of the picture ---- */
@@ -1183,9 +1185,11 @@ const Sound = (function(){
      scale:[185.00,220,277.18,369.99], pat:[0,-1,-1,-1,-1,-1,-1,-1,1,-1,-1,-1,-1,-1,-1,-1], beat:1.8, mg:.045, mt:'sine'},
     {a:100, b:108, chord:[92.50,138.59,185.00,233.08,277.18], cut:950, pad:.130, nz:.046, det:14, rv:.60,
      scale:[185.00,233.08,277.18], pat:[0,-1,-1,1,-1,-1,2,-1], beat:.9, mg:.050, mt:'sine'},
-    {a:108, b:142, chord:[92.50,130.81,155.56,207.65,293.66,466.16], cut:1150, pad:.120, nz:.050, det:24, rv:.82,
+    {a:108, b:146, chord:[92.50,130.81,155.56,207.65,293.66,466.16], cut:1150, pad:.120, nz:.050, det:24, rv:.82,
      scale:[233.08,261.63,311.13,369.99,415.30], pat:[0,-1,3,-1,-1,1,-1,-1,4,-1,-1,-1,2,-1,-1,-1], beat:.8, mg:.055, mt:'square'},
-    {a:142, b:176, chord:[73.42,110,146.83,174.61,261.63], cut:880, pad:.130, nz:.034, det:6,  rv:.56,
+    {a:146, b:153.5, chord:[82.41,123.47,164.81,246.94], cut:700, pad:.115, nz:.028, det:8, rv:.70,
+     scale:[164.81,196.00,246.94], pat:[0,-1,-1,-1,-1,-1,2,-1,-1,-1,-1,-1], beat:1.6, mg:.045, mt:'sine'},
+    {a:153.5, b:176, chord:[73.42,110,146.83,174.61,261.63], cut:880, pad:.130, nz:.034, det:6,  rv:.56,
      scale:[174.61,220,261.63,329.63], pat:[0,-1,-1,-1,-1,-1,2,-1,-1,-1,-1,-1], beat:1.2, mg:.040, mt:'sine', ticks:.60},
     {a:176, b:236, chord:[73.42,110,146.83,220,329.63,440], cut:3200, pad:.120, nz:.020, det:4,  rv:.64,
      scale:[293.66,369.99,440,587.33,659.25], pat:[0,-1,-1,2,-1,-1,4,-1,3,-1,-1,1,-1,-1,-1,-1], beat:1.0, mg:.070, mt:'triangle', thump:4},
@@ -1495,16 +1499,16 @@ function animate(t, dt){
   }
 
   /* --- the dreams ------------------------------------------------ */
-  gDream.visible = t>=108.3 && t<142.8;
+  gDream.visible = t>=108.3 && t<154.0;
   if(gDream.visible){
     frags.forEach(fr=>{
       const d=fr.userData;
       if(d.order===FRAG_N-1){
-        fr.material.opacity = band(t,119,142,1.4);
+        fr.material.opacity = band(t,119,152,1.6);
         fr.position.y = 1.6 + Math.sin(t*0.5)*0.09;
         fr.rotation.z = Math.sin(t*0.33)*0.02;
       }else{
-        fr.material.opacity = band(t,109+d.order*0.42,141,1.0);
+        fr.material.opacity = band(t,109+d.order*0.42,152,1.4);
         fr.position.y += Math.sin(t*d.drift+d.phase)*0.0016;
         fr.rotation.z = Math.sin(t*0.22+d.phase)*0.05;
         fr.rotation.y += dt*0.02;
@@ -1512,14 +1516,14 @@ function animate(t, dt){
     });
     field.material.opacity = band(t,126,138.5,1.1);
     field.position.y = -1.15 + Math.sin(t*0.7)*0.05;
-    dreamHaze.intensity = band(t,109,142,2)*7;
+    dreamHaze.intensity = band(t,109,148,2)*7;
     gDream.rotation.y = Math.sin(t*0.05)*0.09;
   }
 
   /* --- the room --------------------------------------------------- */
-  gRoom.visible = t>=142.3 && t<176.6;
+  gRoom.visible = t>=153.4 && t<176.6;
   if(gRoom.visible){
-    const f=reduce?0.2:1, fade=band(t,142.3,176.4,1.0);
+    const f=reduce?0.2:1, fade=band(t,153.4,176.4,1.0);
     for(let i=0;i<ROOM_N;i++){
       const d=screens[i];
       const v=(0.55+0.34*Math.sin(t*d.rate+d.phase)*f)*fade;
@@ -1620,7 +1624,7 @@ function updateHUD(t){
 let lastDip=-9;
 function updateDip(t){
   let d=0;
-  [142,176].forEach(x=>{ d=Math.max(d, 1-clamp(Math.abs(t-x)/0.85,0,1)); });
+  [153.5,176].forEach(x=>{ d=Math.max(d, 1-clamp(Math.abs(t-x)/0.85,0,1)); });
   d=Math.max(d, ramp(t,249.5,252.5));
   if(Math.abs(d-lastDip)>0.004){ dip.style.opacity=d.toFixed(3); lastDip=d; }
 }
