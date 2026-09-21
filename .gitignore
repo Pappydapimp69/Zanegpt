@@ -1,0 +1,10 @@
+# Python bytecode, produced by importing the runtime modules
+__pycache__/
+*.py[cod]
+
+# Session state written by ZaneStorage — session-only by design, per
+# persistence_runtime.md. Not canonical, so not tracked.
+.zanegpt/
+
+# Intermediate minified snapshots; the visualiser embeds these at build time
+animations/**/*.min.json
