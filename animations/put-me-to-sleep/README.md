@@ -14,13 +14,13 @@ A hand-rolled post chain — two full-screen passes and a ping-pong pair of
 render targets, no addons: frame feedback (zoomed, spun and hue-rotated),
 a kaleidoscopic fold, two domain warps, chromatic split and hue cycling.
 
-**None of it runs before the dreams.** Movements I-III render straight — the
-chain is bypassed outright, not set to zero — and the effects arrive with the
-shudder at 1:47, the moment the app breaks. They build through the dreams,
-fold the room into wedges (a room of people mirrored into itself) and open the
-network into a zoom tunnel.
+**It belongs to the dreams and nothing else.** Movements I-III render straight
+— the chain is bypassed outright, not set to zero — and the effects arrive
+with the shudder at 1:47, the moment the app breaks. They peak through the
+dreams and phase back out from 2:16, so the room and the network are clean
+again.
 
-The onset is `TRIP_ONSET`/`TRIP_FULL`; move those to shift where it starts.
+The window is `TRIP_ONSET`/`TRIP_FULL` and `TRIP_OUT`/`TRIP_CLEAR`.
 
 The **Trip** slider in the transport runs 0-100 and is remembered per viewer;
 at 0 the chain is bypassed entirely and the picture renders straight.
@@ -53,12 +53,22 @@ disables itself where unsupported.
 | v | The Room | 2:22 |
 | vi | One Node | 2:56 |
 
-Total runtime 3:42.
+Total runtime 4:12.
+
+## Holds
+
+`HOLDS` stops the clock, the picture and the narration together. There is one,
+after the narrator answers the dream: the AI's "thank you, that's useful too"
+has to land on a silence rather than on the heels of the answer, because the
+silence is where the answer goes somewhere.
 
 ## Notes
 
-- Captions are a curated selection of lines from the transcript, not the
-  whole of it. The piece is an adaptation.
+- Captions are a selection from the transcript, not the whole of it, but they
+  carry the argument rather than only the imagery: the app being reliably
+  right, the questions ceasing to be about the narrator's garden, the lessons
+  always saying "I learned" and never "another user told me". An earlier cut
+  dropped those and the ending stopped following from anything.
 - The home-screen character is an original design. The source deliberately
   declines to describe it.
 - `three.js` is the only dependency, loaded from a CDN as an ES module.

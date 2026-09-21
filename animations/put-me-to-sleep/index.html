@@ -728,10 +728,10 @@ const dreamHaze=new THREE.PointLight(0xc9718f,0,40); dreamHaze.position.set(0,3,
 const gRoom = new THREE.Group(); scene.add(gRoom); gRoom.visible=false;
 
 const roomFloor=new THREE.Mesh(new THREE.PlaneGeometry(220,220),
-  new THREE.MeshStandardMaterial({color:0x1a1611,roughness:1}));
+  new THREE.MeshStandardMaterial({color:0x110e0a,roughness:1}));
 roomFloor.rotation.x=-Math.PI/2; roomFloor.position.y=-2.4; gRoom.add(roomFloor);
 
-const skinMat  = new THREE.MeshStandardMaterial({color:0x2b2a26,roughness:.95});
+const skinMat  = new THREE.MeshStandardMaterial({color:0x221e18,roughness:.95});
 const chairMat = new THREE.MeshStandardMaterial({color:0x1f1d19,roughness:1});
 const screens  = [];
 const roomR = seeded(77);
@@ -772,7 +772,7 @@ for(let i=0;i<7;i++){
       side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
   c.position.set((i-3)*8.5,5.6,-i*5.4+2); gRoom.add(c);
 }
-gRoom.add(new THREE.PointLight(0xffb977,14,46));
+gRoom.add(new THREE.PointLight(0xffb977,4.5,42));
 gRoom.children[gRoom.children.length-1].position.set(0,5,-6);
 
 /* ---------- movement VI: one node in something much larger ---------- */
@@ -855,9 +855,14 @@ const MOV=[
   {n:'iii', name:'Put Me To Sleep', a:62,  b:96},
   {n:'iv',  name:'The Dreams',      a:96,  b:142},
   {n:'v',   name:'The Room',        a:142, b:176},
-  {n:'vi',  name:'One Node',        a:176, b:222}
+  {n:'vi',  name:'One Node',        a:176, b:252}
 ];
-const DUR=222;
+const DUR=252;
+
+/* Scripted holds: the clock, the picture and the narration all stop. The one
+   that matters is after the narrator answers the dream — the AI's "that's
+   useful too" should land on a silence, not on the heels of the answer. */
+const HOLDS=[{at:140.2, dur:3.6}];
 
 /* Captions are a selection from the transcript, not the whole of it —
    an adaptation. `app` = the AI's own voice. */
@@ -873,17 +878,19 @@ const CAPS=[
 
   [35,'The app analysed it in seconds'],
   [38.5,'and dropped little coloured dots onto the image, each one labelling a plant.'],
-  [44,'Cherokee purple tomato, one said.'],
-  [47.5,'I didn’t know if the app was right.'],
-  [50.5,'But it was specific. I liked specific.'],
-  [54,'The second dot said basil. I hadn’t planted basil.'],
+  [43.5,'Cherokee purple tomato, one said.'],
+  [46.3,'The farmer’s market tag had said heirloom. That was all I’d known.'],
+  [49.5,'I didn’t know if the app was right.'],
+  [52,'But it was specific. I liked specific.'],
+  [54.5,'The second dot said basil. I hadn’t planted basil.'],
   [57.5,'I renamed it unknown weed.'],
   [60.3,'Noted.','app'],
 
   [63.5,'There was a character on the home screen.'],
-  [67,'It had a face. Something close enough to a face that my brain filled in the rest.'],
-  [72,'There was a button that said put me to sleep.'],
-  [75.5,'The character yawned and curled up, and the app went into a different mode.'],
+  [66.3,'It had a face. Something close enough to a face that my brain filled in the rest.'],
+  [69.5,'The app got things right. It was useful. That’s the whole reason I kept using it.'],
+  [72.5,'There was a button that said put me to sleep.'],
+  [75.6,'The character yawned and curled up, and the app went into a different mode.'],
   [80,'Processing what we learned today.','app'],
   [83.5,'We…'],
   [86,'The next morning there was a slideshow waiting for me.'],
@@ -896,35 +903,45 @@ const CAPS=[
   [107.6,'The app shuddered.'],
   [110.5,'The proportions weren’t right. The eyes weren’t where they should have been.'],
   [115,'I dreamed about a squash plant, the first one said.','app wrong'],
-  [119,'The leaves were yellow and the data was arguing about why.','app wrong'],
-  [123,'Something else kept whispering vine borers and I couldn’t see it clearly.','app wrong'],
-  [127,'What do you think it was?','app wrong'],
-  [130.5,'I have never grown squash.'],
-  [133.5,'The dream wasn’t about something from my garden.'],
-  [137,'Have you seen this before? I keep almost remembering it.','app wrong'],
-  [140,'Thank you. That’s useful too.','app'],
+  [118.5,'The leaves were yellow and the data was arguing about why.','app wrong'],
+  [122,'Something else kept whispering vine borers and I couldn’t see it clearly.','app wrong'],
+  [126,'What do you think it was?','app wrong'],
+  [129,'I have never grown squash. I have never photographed a squash plant.'],
+  [132.5,'The dream wasn’t about something from my garden.'],
+  [135.5,'Have you seen this before? I keep almost remembering it.','app wrong'],
+  [139,'I told the truth and said I didn’t know.'],
+  [140.8,'Thank you. That’s useful too.','app'],
 
-  [143.5,'In month four, I had a dream of my own.'],
-  [147.5,'I was in a room with a lot of other people.'],
-  [151,'The room was warm and dim and felt like a greenhouse.'],
-  [154.5,'But it wasn’t a greenhouse.'],
-  [157.5,'We were sitting in chairs, facing different directions, all of us looking at our phones.'],
-  [163,'None of us could see each other’s screens.'],
-  [166.5,'I knew that we were all answering the same questions.'],
-  [170,'I knew that we didn’t know we were doing it.'],
-  [173,'Thank you for coming back.','app'],
+  [143.4,'That’s useful too. What is it useful for?'],
+  [146.5,'It wasn’t that the AI was asking me questions. That part was the deal.'],
+  [150.3,'It was that the questions weren’t about my garden anymore.'],
+  [153.8,'In month four, I had a dream of my own.'],
+  [156.8,'I was in a room with a lot of other people. It felt like a greenhouse.'],
+  [160.8,'But it wasn’t a greenhouse.'],
+  [163.3,'We were sitting in chairs, facing different directions, all of us looking at our phones.'],
+  [167.8,'None of us could see each other’s screens.'],
+  [170.8,'I knew that we were all answering the same questions.'],
+  [173.5,'I knew that we didn’t know we were doing it.'],
+  [175.8,'Thank you for coming back.','app'],
 
-  [178,'The character on my home screen is not the AI.'],
-  [182,'The AI isn’t on my phone.'],
-  [185.5,'The AI is somewhere else, and the character is just the part of it that talks to me.'],
-  [191,'The app is a gardening app. That’s true.'],
-  [194.5,'It’s also one node in something much larger.'],
-  [198.5,'And I have been feeding it for eight months without knowing what I was feeding.'],
-  [204,'And I think a lot of you reading this have been feeding it too.'],
-  [208.5,'And I think that some of the dreams you’ve been answering have been mine.'],
-  [213,'I’m going to put it to sleep tonight.'],
-  [216.5,'In the morning there will be a slideshow.'],
-  [219,'I’ll let you know what it says.','app']
+  [179,'The character on my home screen is not the AI.'],
+  [183,'The AI isn’t on my phone.'],
+  [186.5,'The AI is somewhere else, and the character is just the part of it that talks to me.'],
+  [191.5,'The lessons in the morning were always polite. Always in first person.'],
+  [196,'I learned that in some climates, vine borers emerge earlier in the season.','app'],
+  [200.5,'Never another user told me. Never somewhere else.'],
+  [204,'Just — I learned.'],
+  [207,'But the AI never told me.'],
+  [210.5,'The AI is not malicious. It is helpful. It is patient.'],
+  [215,'But it’s collecting something. It’s collecting all of us.'],
+  [220,'The app is a gardening app. That’s true.'],
+  [223.5,'It’s also one node in something much larger.'],
+  [227.5,'And I have been feeding it for eight months without knowing what I was feeding.'],
+  [232.5,'And I think a lot of you reading this have been feeding it too.'],
+  [237,'And I think that some of the dreams you’ve been answering have been mine.'],
+  [241.5,'I’m going to put it to sleep tonight.'],
+  [245,'In the morning there will be a slideshow.'],
+  [248.5,'I’ll let you know what it says.']
 ];
 
 /* colour grade keyframes */
@@ -935,24 +952,22 @@ const GRADE=[
   {t:78, top:0x2c4c6b,bot:0x0d1620,fog:0x14222f,fogD:.0150,hemi:[0x9cbfdd,0x101822,.50],key:[0x86b0d6,.80],rim:[0x4d7399,.55],exp:0.96,sat:.55},
   {t:104,top:0x24405c,bot:0x0a121a,fog:0x101c28,fogD:.0165,hemi:[0x9cbfdd,0x0d141c,.44],key:[0x86b0d6,.68],rim:[0x4d7399,.50],exp:0.94,sat:.44},
   {t:112,top:0x5c3252,bot:0x160f19,fog:0x2a1730,fogD:.0150,hemi:[0xd98aa5,0x160f18,.70],key:[0xd98aa5,1.18],rim:[0x8a65a0,.66],exp:1.10,sat:.56},
-  {t:142,top:0x402d1a,bot:0x0f0b07,fog:0x1d1308,fogD:.0150,hemi:[0xffc08a,0x161008,.54],key:[0xffbe82,.86],rim:[0xffcf94,.40],exp:1.04,sat:.74},
-  {t:176,top:0x14222c,bot:0x05080a,fog:0x0a1013,fogD:.0032,hemi:[0x8ccb6e,0x040810,.40],key:[0x8ccb6e,.52],rim:[0x5a8cbe,.46],exp:1.24,sat:.85},
-  {t:222,top:0x060b0e,bot:0x020303,fog:0x030405,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.16],key:[0x8ccb6e,.20],rim:[0x3a5c7e,.20],exp:1.08,sat:.85}
+  {t:142,top:0x2a1d0c,bot:0x090704,fog:0x110a04,fogD:.0205,hemi:[0xffb877,0x0c0805,.30],key:[0xffb474,.52],rim:[0xffcf94,.26],exp:0.88,sat:.74},
+  {t:176,top:0x0f1a23,bot:0x040607,fog:0x070c0f,fogD:.0032,hemi:[0x8ccb6e,0x030609,.34],key:[0x8ccb6e,.46],rim:[0x5a8cbe,.40],exp:1.16,sat:.85},
+  {t:252,top:0x060b0e,bot:0x020303,fog:0x030405,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.16],key:[0x8ccb6e,.20],rim:[0x3a5c7e,.20],exp:1.08,sat:.85}
 ];
 
 /* The trip does not exist until the app shudders. Movements I-III render
    straight through — the post chain is bypassed entirely, not merely set to
    zero — and the effects arrive with the break at 1:47, building through the
    dreams, folding the room into wedges and opening the network into a tunnel. */
-const TRIP_ONSET=107.3, TRIP_FULL=109.6;
+const TRIP_ONSET=107.3, TRIP_FULL=109.6;   /* arrives with the shudder */
+const TRIP_OUT=136,     TRIP_CLEAR=143;    /* and leaves with the dreams   */
 const TRIP=[
   {t:107.3,kal:0, fb:.10, warp:.10, chr:.30, hue:.020, osc:.040, sat:1.10, zoom:1.0020, rot:.0004, hf:.06},
   {t:112,  kal:5, fb:.40, warp:.50, chr:.82, hue:.085, osc:.110, sat:1.42, zoom:1.0082, rot:.0028, hf:.26},
   {t:128,  kal:6, fb:.43, warp:.56, chr:.92, hue:.100, osc:.120, sat:1.46, zoom:1.0096, rot:.0034, hf:.30},
-  {t:142,  kal:6, fb:.34, warp:.30, chr:.48, hue:.045, osc:.070, sat:1.30, zoom:1.0056, rot:.0015, hf:.16},
-  {t:176,  kal:3, fb:.38, warp:.22, chr:.54, hue:.055, osc:.080, sat:1.34, zoom:1.0070, rot:.0020, hf:.20},
-  {t:214,  kal:3, fb:.28, warp:.13, chr:.34, hue:.028, osc:.050, sat:1.22, zoom:1.0044, rot:.0010, hf:.12},
-  {t:222,  kal:0, fb:.20, warp:.09, chr:.22, hue:.016, osc:.040, sat:1.16, zoom:1.0030, rot:.0006, hf:.08}
+  {t:143,  kal:4, fb:.30, warp:.28, chr:.50, hue:.050, osc:.070, sat:1.28, zoom:1.0050, rot:.0016, hf:.14}
 ];
 const TRIP_KEYS=['kal','fb','warp','chr','hue','osc','sat','zoom','rot','hf'];
 const trip={};
@@ -974,9 +989,9 @@ const CAM=[
   {a:126,b:142,p0:[ 0.00,1.50,1.30], l0:[ 0.00,1.50,-3.20], p1:[ 0.00,-0.30,1.90], l1:[ 0.00,-1.00,-3.00]},
   {a:142,b:160,p0:[ 0.00,2.20,18.0], l0:[ 0.00,0.60,-4.00], p1:[ 0.00,2.00,2.00], l1:[ 0.00,0.60,-16.0]},
   {a:160,b:176,p0:[ 0.00,2.00,2.00], l0:[ 0.00,0.60,-16.0], p1:[ 1.60,3.40,-14.], l1:[ 0.00,0.80,-30.0]},
-  {a:176,b:196,p0:[ 0.00,14.0,210.], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,18.0,118.], l1:[ 0.00,0.00, 0.00]},
-  {a:196,b:214,p0:[ 0.00,18.0,118.], l0:[ 0.00,0.00, 0.00], p1:[-30.0,8.00,88.0], l1:[ 0.00,0.00, 0.00]},
-  {a:214,b:222,p0:[-30.0,8.00,88.0], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,40.0,260.], l1:[ 0.00,0.00, 0.00]}
+  {a:176,b:206,p0:[ 0.00,14.0,210.], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,18.0,118.], l1:[ 0.00,0.00, 0.00]},
+  {a:206,b:232,p0:[ 0.00,18.0,118.], l0:[ 0.00,0.00, 0.00], p1:[-30.0,8.00,88.0], l1:[ 0.00,0.00, 0.00]},
+  {a:232,b:252,p0:[-30.0,8.00,88.0], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,40.0,260.], l1:[ 0.00,0.00, 0.00]}
 ];
 
 /* ===================================================================
@@ -1120,7 +1135,7 @@ const Sound = (function(){
     [75.8,'sleep'],[86.0,'slide'],[88.0,'slide'],[90.0,'slide'],[92.0,'slide'],[94.0,'slide'],
     [100.6,'tap'],[103.8,'tap'],[107.45,'shudder'],
     [115.0,'shimmer'],[127.0,'shimmer'],[137.0,'shimmer'],
-    [143.0,'swell'],[173.0,'chime'],[176.3,'swell'],[213.0,'chime'],[219.0,'noted']
+    [143.0,'swell'],[173.0,'chime'],[176.3,'swell'],[139.2,'noted'],[236.0,'chime'],[248.0,'noted']
   ];
 
   /* ---- the score proper: one entry per section of the picture ---- */
@@ -1139,9 +1154,9 @@ const Sound = (function(){
      scale:[233.08,261.63,311.13,369.99,415.30], pat:[0,-1,3,-1,-1,1,-1,-1,4,-1,-1,-1,2,-1,-1,-1], beat:.8, mg:.055, mt:'square'},
     {a:142, b:176, chord:[73.42,110,146.83,174.61,261.63], cut:880, pad:.130, nz:.034, det:6,  rv:.56,
      scale:[174.61,220,261.63,329.63], pat:[0,-1,-1,-1,-1,-1,2,-1,-1,-1,-1,-1], beat:1.2, mg:.040, mt:'sine', ticks:.60},
-    {a:176, b:214, chord:[73.42,110,146.83,220,329.63,440], cut:3200, pad:.120, nz:.020, det:4,  rv:.64,
+    {a:176, b:236, chord:[73.42,110,146.83,220,329.63,440], cut:3200, pad:.120, nz:.020, det:4,  rv:.64,
      scale:[293.66,369.99,440,587.33,659.25], pat:[0,-1,-1,2,-1,-1,4,-1,3,-1,-1,1,-1,-1,-1,-1], beat:1.0, mg:.070, mt:'triangle', thump:4},
-    {a:214, b:240, chord:[73.42,110,146.83,220], cut:760, pad:.070, nz:.012, det:4,  rv:.78,
+    {a:236, b:266, chord:[73.42,110,146.83,220], cut:760, pad:.070, nz:.012, det:4,  rv:.78,
      scale:[293.66,440], pat:[0,-1,-1,-1,-1,-1,-1,-1], beat:2.0, mg:.050, mt:'sine'}
   ];
 
@@ -1473,7 +1488,7 @@ function animate(t, dt){
       pa.array[i*3+2]=lerp(a.z,b.z,p.u);
     }
     pa.needsUpdate=true;
-    const mineOn=ramp(t,199,205);
+    const mineOn=ramp(t,216,224);
     mine.material.opacity = mineOn*(0.55+0.45*Math.sin(t*2.2));
     ring.material.opacity = mineOn*0.7;
     ring.lookAt(camera.position);
@@ -1481,7 +1496,7 @@ function animate(t, dt){
   }
 
   /* the closing mark, held in front of the lens */
-  const endOn = band(t,216.5,222.5,1.6);
+  const endOn = band(t,244,252.6,1.8);
   endLeaf.material.opacity = endOn*0.9;
   if(endOn>0){
     camera.getWorldDirection(tmpV);
@@ -1530,14 +1545,20 @@ function updateHUD(t){
 function updateDip(t){
   let d=0;
   [142,176].forEach(x=>{ d=Math.max(d, 1-clamp(Math.abs(t-x)/0.85,0,1)); });
-  d=Math.max(d, ramp(t,220,222.4));
+  d=Math.max(d, ramp(t,249.5,252.5));
   dip.style.opacity=d.toFixed(3);
 }
 
 /* ---------- transport ------------------------------------------------ */
 let time=0, playing=false, last=performance.now();
 let hueAcc=0, feedHue=0;
-function seek(v){ time=clamp(v,0,DUR); capIdx=-2; TAGS.forEach(t=>t.cur=-1); Sound.resync(); Narrator.stop(); }
+let holdIdx=-1, holdUntil=0;
+function seek(v){
+  time=clamp(v,0,DUR); capIdx=-2; TAGS.forEach(t=>t.cur=-1);
+  Sound.resync(); Narrator.stop();
+  holdUntil=0; holdIdx=-1;
+  for(let i=0;i<HOLDS.length;i++) if(time>=HOLDS[i].at) holdIdx=i;
+}
 playBtn.textContent='Play';
 playBtn.addEventListener('click',()=>{
   Sound.start();
@@ -1619,8 +1640,14 @@ let plateHidden=false;
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min((now-last)/1000,0.05); last=now;
-  if(playing){
+  if(playing && now>=holdUntil){
     time+=dt;
+    for(let i=holdIdx+1;i<HOLDS.length;i++){
+      if(time>=HOLDS[i].at){              /* freeze clock, picture and voice */
+        time=HOLDS[i].at; holdIdx=i; holdUntil=now+HOLDS[i].dur*1000;
+        Narrator.stop(); break;
+      }
+    }
     if(time>=DUR){ time=DUR; playing=false; playBtn.textContent='Replay'; Narrator.stop(); }
   }
   const t=time;
@@ -1640,7 +1667,8 @@ function frame(now){
   setCaption(ci);
 
   /* reduced motion keeps the piece but takes the edge off the cycling */
-  let amt = (reduce ? Math.min(tripAmt,0.30) : tripAmt) * ramp(t,TRIP_ONSET,TRIP_FULL);
+  let amt = (reduce ? Math.min(tripAmt,0.30) : tripAmt)
+          * ramp(t,TRIP_ONSET,TRIP_FULL) * (1-ramp(t,TRIP_OUT,TRIP_CLEAR));
   const spike = (t>107.3 && t<109.6) ? band(t,107.3,109.6,.3) : 0;
 
   if(amt<0.02 || !rtScene){
