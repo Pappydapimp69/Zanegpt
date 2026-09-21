@@ -14,11 +14,13 @@ A hand-rolled post chain — two full-screen passes and a ping-pong pair of
 render targets, no addons: frame feedback (zoomed, spun and hue-rotated),
 a kaleidoscopic fold, two domain warps, chromatic split and hue cycling.
 
-It is scored like everything else rather than applied flat. The balcony only
-shimmers and its hue *oscillates* so the designed palette survives; from the
-dreams onward the hue *cycles* fully. The room folds into wedges — a room of
-people mirrored into itself — and the network opens into a zoom tunnel. The
-shudder at 1:47 spikes every parameter at once.
+**None of it runs before the dreams.** Movements I-III render straight — the
+chain is bypassed outright, not set to zero — and the effects arrive with the
+shudder at 1:47, the moment the app breaks. They build through the dreams,
+fold the room into wedges (a room of people mirrored into itself) and open the
+network into a zoom tunnel.
+
+The onset is `TRIP_ONSET`/`TRIP_FULL`; move those to shift where it starts.
 
 The **Trip** slider in the transport runs 0-100 and is remembered per viewer;
 at 0 the chain is bypassed entirely and the picture renders straight.
