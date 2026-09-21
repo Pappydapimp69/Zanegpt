@@ -85,7 +85,7 @@ body{
 .tag.noted em{opacity:.9}
 
 /* --- caption band ---------------------------------------------------- */
-.capwrap{position:absolute;left:0;right:0;bottom:82px;z-index:4;
+.capwrap{position:absolute;left:0;right:0;bottom:calc(var(--tp,86px) + 14px);z-index:4;
   display:flex;justify-content:center;padding:0 22px;pointer-events:none}
 
 .cap{max-width:min(660px,100%);width:auto;text-align:center;
@@ -121,17 +121,21 @@ body{
   transform:translateX(-50%);box-shadow:0 0 10px rgba(207,231,186,.8);left:0}
 .chaps{position:absolute;left:0;right:0;height:2px;pointer-events:none}
 .chaps i{position:absolute;width:1px;height:8px;top:-3px;background:rgba(207,231,186,.35)}
-.row{display:flex;align-items:center;gap:16px;margin-top:6px}
-button.tbtn{appearance:none;background:none;border:1px solid var(--hair);border-radius:2px;
-  color:var(--sap);font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-  text-transform:uppercase;padding:7px 13px;cursor:pointer;
+.row{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:nowrap;min-width:0}
+button.ibtn{appearance:none;background:none;border:1px solid var(--hair);border-radius:2px;
+  color:var(--sap);padding:0;cursor:pointer;flex:0 0 auto;
+  width:34px;height:34px;display:grid;place-items:center;
   transition:border-color .2s ease,color .2s ease,background .2s ease}
-button.tbtn:hover{border-color:var(--leaf);color:var(--leaf);background:rgba(140,203,110,.07)}
-button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
-.trip{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10px;
+button.ibtn svg{width:17px;height:17px;display:block}
+button.ibtn:hover{border-color:var(--leaf);color:var(--leaf);background:rgba(140,203,110,.07)}
+button.ibtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+button.ibtn[aria-pressed="false"]{color:var(--ash-dim);border-color:rgba(207,231,186,.09)}
+button.ibtn[disabled]{opacity:.32;cursor:default}
+.trip{display:flex;align-items:center;gap:7px;flex:0 0 auto;margin-left:5px;
+  font-family:var(--mono);font-size:10px;
   letter-spacing:.14em;text-transform:uppercase;color:var(--ash);white-space:nowrap}
 .trip b{color:var(--leaf);font-weight:400;font-variant-numeric:tabular-nums;min-width:2.2em}
-.trip input[type=range]{appearance:none;-webkit-appearance:none;width:86px;height:14px;
+.trip input[type=range]{appearance:none;-webkit-appearance:none;width:72px;height:16px;
   background:none;cursor:pointer}
 .trip input[type=range]::-webkit-slider-runnable-track{height:2px;background:rgba(207,231,186,.2);border-radius:2px}
 .trip input[type=range]::-moz-range-track{height:2px;background:rgba(207,231,186,.2);border-radius:2px}
@@ -141,11 +145,13 @@ button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
 .trip input[type=range]::-moz-range-thumb{width:10px;height:10px;border:0;border-radius:50%;
   background:var(--leaf);box-shadow:0 0 9px rgba(140,203,110,.8)}
 .trip input[type=range]:focus-visible{outline:2px solid var(--leaf);outline-offset:3px}
-.movements{display:flex;gap:4px;flex:1 1 auto;overflow-x:auto;scrollbar-width:none}
+.movements{display:flex;gap:2px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
 .movements::-webkit-scrollbar{display:none}
 .movements b{font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ash-dim);padding:6px 9px;cursor:pointer;white-space:nowrap;
+  text-transform:uppercase;color:var(--ash-dim);padding:6px 7px;cursor:pointer;white-space:nowrap;
   border-bottom:1px solid transparent;transition:color .2s ease,border-color .2s ease}
+.movements b i{font-style:normal}
+.movements b span{margin-left:6px}
 .movements b:hover{color:var(--sap)}
 .movements b.cur{color:var(--leaf);border-bottom-color:var(--leaf)}
 
@@ -171,12 +177,17 @@ button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
 .plate .hint{color:var(--ash-dim);letter-spacing:.14em}
 .plate .err{color:var(--wrong);max-width:400px;line-height:1.7;text-transform:none;letter-spacing:.02em;font-size:12px}
 
+@media (max-width:760px){
+  .movements b span{display:none}        /* numerals only; the top bar names the movement */
+  .trip .lbl{display:none}
+}
 @media (max-width:640px){
-  .capwrap{bottom:94px}
   .cap{font-size:19px}
   .hud{font-size:9.5px;gap:10px;padding:14px 16px}
-  .transport{padding:0 16px 14px}
-  .row{gap:10px;flex-wrap:wrap}
+  .transport{padding:0 14px 12px}
+  .row{gap:6px}
+  button.ibtn{width:32px;height:32px}
+  .trip input[type=range]{width:58px}
 }
 @media (prefers-reduced-motion:reduce){
   .grain{animation:none}
@@ -215,11 +226,11 @@ button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
       <div class="chaps" id="chaps"></div><div class="knob" id="knob"></div>
     </div>
     <div class="row">
-      <button class="tbtn" id="play" type="button">Pause</button>
-      <button class="tbtn" id="restart" type="button">Restart</button>
-      <button class="tbtn" id="sound" type="button" aria-pressed="true">Sound on</button>
-      <button class="tbtn" id="voice" type="button" aria-pressed="false">Narration off</button>
-      <label class="trip" for="trip">Trip
+      <button class="ibtn" id="play" type="button" aria-label="Play" title="Play"></button>
+      <button class="ibtn" id="restart" type="button" aria-label="Restart" title="Restart"></button>
+      <button class="ibtn" id="sound" type="button" aria-pressed="true" aria-label="Sound on" title="Sound"></button>
+      <button class="ibtn" id="voice" type="button" aria-pressed="false" aria-label="Narration off" title="Narration"></button>
+      <label class="trip" for="trip"><span class="lbl">Trip</span>
         <input type="range" id="trip" min="0" max="100" value="78" step="1"
                aria-label="Trip intensity">
         <b id="tripVal">78</b></label>
@@ -1344,10 +1355,37 @@ const dip=document.createElement('div');
 dip.style.cssText='position:absolute;inset:0;background:#000;opacity:0;pointer-events:none';
 document.querySelector('.grade').appendChild(dip);
 
+
+/* Transport glyphs. Text labels wrapped the row onto three lines on a phone
+   and ran under the caption, so the controls are icons with the wording kept
+   on aria-label and title. */
+const SVG = d => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+d+'</svg>';
+const ST  = 'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"';
+const ICON = {
+  play   : SVG('<path fill="currentColor" d="M8 5.1v13.8L19 12z"/>'),
+  pause  : SVG('<path fill="currentColor" d="M6.6 5h3.5v14H6.6zM13.9 5h3.5v14h-3.5z"/>'),
+  restart: SVG('<path '+ST+' d="M19.6 12A7.6 7.6 0 1 1 17 6.3"/><path fill="currentColor" d="M18.1 2.6l1.5 5.1-5.1-1.1z"/>'),
+  soundOn: SVG('<path fill="currentColor" d="M4 9.4v5.2h3.4L12 19V5L7.4 9.4z"/>'+
+               '<path '+ST+' d="M15.3 8.9a4.4 4.4 0 0 1 0 6.2M18 6.3a8.1 8.1 0 0 1 0 11.4"/>'),
+  soundOff:SVG('<path fill="currentColor" d="M4 9.4v5.2h3.4L12 19V5L7.4 9.4z"/>'+
+               '<path '+ST+' d="M15.6 9.6l5 4.8m0-4.8l-5 4.8"/>'),
+  voiceOn: SVG('<path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" '+
+               'd="M4 5.4h16v9.8h-9.4L6 18.8v-3.6H4z"/>'+
+               '<path fill="currentColor" d="M7.7 9.4h1.7v1.7H7.7zm3.4 0h1.7v1.7h-1.7zm3.5 0h1.7v1.7h-1.7z"/>'),
+  voiceOff:SVG('<path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" '+
+               'd="M4 5.4h16v9.8h-9.4L6 18.8v-3.6H4z"/>'+
+               '<path '+ST+' d="M3.6 3.6l16.8 16.8"/>')
+};
+function setBtn(el, icon, label){
+  el.innerHTML=icon; el.setAttribute('aria-label',label); el.title=label;
+}
+
 /* movement buttons + chapter ticks */
 MOV.forEach((m,i)=>{
   const b=document.createElement('b');
-  b.textContent=m.n+' · '+m.name; b.tabIndex=0; b.setAttribute('role','button');
+  b.innerHTML='<i>'+m.n+'</i><span>'+m.name+'</span>';
+  b.tabIndex=0; b.setAttribute('role','button');
+  b.title=m.n+' · '+m.name;
   const go=()=>{ seek(m.a+0.05); };
   b.addEventListener('click',go);
   b.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
@@ -1639,39 +1677,43 @@ function seek(v){
   holdUntil=0; holdIdx=-1;
   for(let i=0;i<HOLDS.length;i++) if(time>=HOLDS[i].at) holdIdx=i;
 }
-playBtn.textContent='Play';
+setBtn(playBtn, ICON.play, 'Play');
+setBtn(document.getElementById('restart'), ICON.restart, 'Restart');
+function syncPlay(){ setBtn(playBtn, playing?ICON.pause:ICON.play, playing?'Pause':'Play'); }
 playBtn.addEventListener('click',()=>{
   Sound.start();
   if(time>=DUR){ seek(0); playing=true; }
   else playing=!playing;
   if(!playing) Narrator.stop();
-  playBtn.textContent=playing?'Pause':'Play';
+  syncPlay();
 });
 
 const beginBtn=document.getElementById('begin');
 beginBtn.addEventListener('click',()=>{
   Sound.start();
   plate.classList.add('gone');
-  playing=true; playBtn.textContent='Pause';
+  playing=true; syncPlay();
 });
 
 const soundBtn=document.getElementById('sound');
 let soundOn=true;
+setBtn(soundBtn, ICON.soundOn, 'Sound on');
 soundBtn.addEventListener('click',()=>{
   soundOn=!soundOn; Sound.setMuted(!soundOn);
-  soundBtn.textContent=soundOn?'Sound on':'Sound off';
+  setBtn(soundBtn, soundOn?ICON.soundOn:ICON.soundOff, soundOn?'Sound on':'Sound off');
   soundBtn.setAttribute('aria-pressed',String(soundOn));
 });
 
 const voiceBtn=document.getElementById('voice');
-if(!Narrator.available){ voiceBtn.disabled=true; voiceBtn.style.opacity='.4'; }
+setBtn(voiceBtn, ICON.voiceOff, 'Narration off');
+if(!Narrator.available){ voiceBtn.disabled=true; }
 voiceBtn.addEventListener('click',()=>{
   const on=!Narrator.enabled;
   Narrator.set(on);
-  voiceBtn.textContent=on?'Narration on':'Narration off';
+  setBtn(voiceBtn, on?ICON.voiceOn:ICON.voiceOff, on?'Narration on':'Narration off');
   voiceBtn.setAttribute('aria-pressed',String(on));
 });
-document.getElementById('restart').addEventListener('click',()=>{ Sound.start(); seek(0); playing=true; playBtn.textContent='Pause'; });
+document.getElementById('restart').addEventListener('click',()=>{ Sound.start(); seek(0); playing=true; syncPlay(); });
 
 function scrubTo(clientX){
   const r=scrubEl.getBoundingClientRect();
@@ -1709,6 +1751,8 @@ function resize(){
   camera.aspect=w/h;
   camera.fov = w/h < 0.9 ? 56 : 42;      /* open up on a phone */
   camera.updateProjectionMatrix();
+  const tp=document.querySelector('.transport');
+  if(tp) document.documentElement.style.setProperty('--tp', tp.offsetHeight+'px');
   const dpr=Math.min(basePR*renderScale, w<700?1:1.25);
   makeTargets(Math.max(2,Math.floor(w*dpr)), Math.max(2,Math.floor(h*dpr)));
   postMat.uniforms.uAspect.value=w/h;
@@ -1750,7 +1794,7 @@ function frame(now){
         Narrator.stop(); break;
       }
     }
-    if(time>=DUR){ time=DUR; playing=false; playBtn.textContent='Replay'; Narrator.stop(); }
+    if(time>=DUR){ time=DUR; playing=false; setBtn(playBtn,ICON.play,'Replay'); Narrator.stop(); }
   }
   const t=time;
 

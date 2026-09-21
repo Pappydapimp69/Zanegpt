@@ -121,7 +121,13 @@ reports the current scale and rolling average.
   slab; the plate does both jobs and matches the app chrome.
 - The original video's audio was never reachable, so none of it is reproduced
   here; the score is written for this piece.
-- Transport: space to play/pause, arrow keys to scrub 5s, movement names to
+- Transport: play/pause, restart, sound and narration are icon buttons on a
+  single row, with the wording on `aria-label` and `title`. Below 760px the
+  movement list drops to roman numerals, since the top bar already names the
+  current movement. The caption band's clearance is `--tp`, set from the
+  transport's measured height on every resize, so the two cannot collide at
+  any width.
+- Keyboard: space to play/pause, arrow keys to scrub 5s, movement names to
   jump.
 
 ## Running it
