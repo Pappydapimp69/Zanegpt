@@ -90,7 +90,7 @@ body{
 .cap{max-width:640px;width:100%;text-align:center;
   font-size:clamp(19px,2.55vw,30px);line-height:1.38;font-weight:300;
   color:var(--bone);text-wrap:balance;
-  text-shadow:0 2px 26px rgba(0,0,0,.92),0 0 3px rgba(0,0,0,.7);
+  text-shadow:0 1px 3px rgba(0,0,0,.85),0 2px 14px rgba(0,0,0,.5);
   opacity:0;transform:translateY(7px);
   transition:opacity .62s ease,transform .62s cubic-bezier(.2,.7,.3,1)}
 .cap.on{opacity:1;transform:none}
@@ -140,8 +140,18 @@ button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
 .plate svg{width:34px;height:34px;color:var(--leaf);
   filter:drop-shadow(0 0 16px rgba(140,203,110,.6));animation:pulse 2.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.plate{background:rgba(6,9,7,.58);backdrop-filter:blur(2px)}
+.plate h1{margin:0;font-family:var(--serif);font-weight:300;font-style:italic;
+  font-size:clamp(34px,6vw,62px);letter-spacing:-.01em;color:var(--bone);text-wrap:balance}
 .plate p{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.2em;
   text-transform:uppercase;color:var(--ash)}
+.plate .begin{appearance:none;background:none;border:1px solid var(--leaf);border-radius:2px;
+  color:var(--leaf);font-family:var(--mono);font-size:12px;letter-spacing:.24em;
+  text-transform:uppercase;padding:14px 34px;cursor:pointer;margin-top:4px;
+  transition:background .25s ease,color .25s ease}
+.plate .begin:hover{background:var(--leaf);color:#0a0f09}
+.plate .begin:focus-visible{outline:2px solid var(--sap);outline-offset:3px}
+.plate .hint{color:var(--ash-dim);letter-spacing:.14em}
 .plate .err{color:var(--wrong);max-width:400px;line-height:1.7;text-transform:none;letter-spacing:.02em;font-size:12px}
 
 @media (max-width:640px){
@@ -190,19 +200,34 @@ button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
     <div class="row">
       <button class="tbtn" id="play" type="button">Pause</button>
       <button class="tbtn" id="restart" type="button">Restart</button>
+      <button class="tbtn" id="sound" type="button" aria-pressed="true">Sound on</button>
+      <button class="tbtn" id="voice" type="button" aria-pressed="false">Narration off</button>
       <nav class="movements" id="movements" aria-label="Movements"></nav>
     </div>
   </div>
 
   <div class="plate" id="plate">
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3.2c-9 .4-14.4 4.3-15.9 9.7-.7 2.5-.3 4.9.9 6.7l-2 3.1 1.5 1 2-3.1c1.9.9 4.3.9 6.6-.2 5-2.3 7.7-8.2 6.9-17.2ZM8.2 18.4c-.6-1.2-.8-2.7-.3-4.4C9 10 12.9 7 19.2 6c-.3 6.3-2.6 10.2-6 11.8-1.8.8-3.6.9-5 .6Z"/></svg>
-    <p id="plateMsg">Waking the garden</p>
+    <h1>Put Me To Sleep</h1>
+    <p id="plateMsg">Six movements &middot; 3:42 &middot; with score</p>
+    <button class="begin" id="begin" type="button">Begin</button>
+    <p class="hint">Headphones recommended</p>
   </div>
 </div>
 
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js"></script>
+<script>
+(function(){
+function fail(msg){
+  var m=document.getElementById('plateMsg');
+  if(m){ m.className='err'; m.textContent=msg; }
+  var p=document.getElementById('plate'); if(p) p.classList.remove('gone');
+}
+var THREE = window.THREE;
+if(!THREE){ fail('The 3D engine could not load. Check the network connection and reload the page.'); return; }
 window.__booted = true;
+window.__fail = fail;
+try{
 
 /* ===================================================================
    Put Me To Sleep — a 3D adaptation
@@ -226,7 +251,7 @@ function band(t,a,b,f=1.2){return Math.min(ramp(t,a,a+f),1-ramp(t,b-f,b));}
 function cvs(w,h,draw){
   const c=document.createElement('canvas');c.width=w;c.height=h;
   draw(c.getContext('2d'),w,h);
-  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
   t.anisotropy=4;return t;
 }
 
@@ -281,12 +306,12 @@ function slideTex(kicker, body){
   return cvs(1024,576,(g,w,h)=>{
     g.fillStyle='#121A13';g.fillRect(0,0,w,h);
     g.strokeStyle='rgba(207,231,186,.34)';g.lineWidth=2;g.strokeRect(1,1,w-2,h-2);
-    g.fillStyle='#8CCB6E';g.font='500 26px "IBM Plex Mono", monospace';
+    g.fillStyle='#8CCB6E';g.font='500 32px "IBM Plex Mono", monospace';
     g.fillText(kicker.toUpperCase(),54,76);
     g.fillRect(54,100,64,3);
-    g.fillStyle='#E9EFE6';g.font='300 42px Newsreader, Georgia, serif';
-    let y=190;
-    body.forEach(line=>{ g.fillText(line,54,y); y+=58; });
+    g.fillStyle='#E9EFE6';g.font='300 50px Newsreader, Georgia, serif';
+    let y=200;
+    body.forEach(line=>{ g.fillText(line,54,y); y+=68; });
   });
 }
 
@@ -331,7 +356,7 @@ function fragTex(seed, wrongness){
 const canvas   = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 
@@ -364,11 +389,11 @@ const fill = new THREE.PointLight(0xffffff, 0, 60);      scene.add(fill);
 const gBalcony = new THREE.Group(); scene.add(gBalcony);
 
 const soilMat  = new THREE.MeshStandardMaterial({color:0x2a2018, roughness:1});
-const potMat   = new THREE.MeshStandardMaterial({color:0x8a4a33, roughness:.85});
+const potMat   = new THREE.MeshStandardMaterial({color:0x73391f, roughness:.85});
 const stemMat  = new THREE.MeshStandardMaterial({color:0x4f7a3c, roughness:.8});
 const leafMatA = new THREE.MeshStandardMaterial({map:leafTex(9,['#6f9e4a','#3d6a2e']), transparent:true, alphaTest:.45, side:THREE.DoubleSide, roughness:.75});
 const leafMatB = new THREE.MeshStandardMaterial({map:leafTex(15,['#7fb055','#41722f']), transparent:true, alphaTest:.45, side:THREE.DoubleSide, roughness:.75});
-const fruitMat = new THREE.MeshStandardMaterial({color:0xb23b2a, roughness:.45});
+const fruitMat = new THREE.MeshStandardMaterial({color:0x9c2a1b, roughness:.45});
 const gradedMats = [soilMat,potMat,stemMat,leafMatA,leafMatB,fruitMat];
 gradedMats.forEach(m=>m.userData.base=m.color.clone());
 
@@ -440,7 +465,7 @@ weed.position.set(-1.05,.74,.3); weed.scale.setScalar(.85); gBalcony.add(weed);
 
 /* the deck and the railing beyond it */
 const deck=new THREE.Mesh(new THREE.BoxGeometry(14,.2,7),
-  new THREE.MeshStandardMaterial({color:0x33302a,roughness:1}));
+  new THREE.MeshStandardMaterial({color:0x2b2823,roughness:1}));
 deck.position.y=-.1; gBalcony.add(deck);
 const railMat=new THREE.MeshStandardMaterial({color:0x22262a,roughness:.6,metalness:.3});
 for(let i=-6;i<=6;i++){
@@ -533,11 +558,11 @@ const slideCopy = [
   ['lesson 05', ['Thank you for letting me rest.']]
 ];
 const slides = slideCopy.map(([k,b],i)=>{
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(3.6,2.03),
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(2.5,1.41),
     new THREE.MeshBasicMaterial({map:slideTex(k,b),transparent:true,opacity:0,side:THREE.DoubleSide}));
   m.userData.i=i; gSlides.add(m); return m;
 });
-gSlides.position.set(0,2.65,2.6);
+gSlides.position.set(0,2.35,1.5);
 
 /* ---------- movement IV: the dreams ---------------------------------
    Real plants with real problems, photographed in real conditions.
@@ -787,13 +812,13 @@ const CAPS=[
 
 /* colour grade keyframes */
 const GRADE=[
-  {t:0,  top:0x7d9464,bot:0x33402c,fog:0x4b5a3c,fogD:.0052,hemi:[0xe6f3d8,0x3a4a2c,1.05],key:[0xffd9ad,2.60],rim:[0x9fd47f,.70],exp:1.22,sat:1.00},
-  {t:34, top:0x8fa771,bot:0x3c4a33,fog:0x55643f,fogD:.0046,hemi:[0xe6f3d8,0x3a4a2c,1.12],key:[0xffe2bb,2.75],rim:[0x9fd47f,.70],exp:1.26,sat:1.00},
-  {t:66, top:0x7b9263,bot:0x333f2b,fog:0x47563a,fogD:.0055,hemi:[0xe6f3d8,0x35452a,1.00],key:[0xffdcb2,2.45],rim:[0x9fd47f,.72],exp:1.20,sat:1.00},
-  {t:78, top:0x3f6a92,bot:0x15222e,fog:0x1d3243,fogD:.0110,hemi:[0xa8cbe8,0x16202b,.72],key:[0x8fb8dd,1.05],rim:[0x4d7399,.70],exp:1.06,sat:.58},
-  {t:104,top:0x33587c,bot:0x101a24,fog:0x162736,fogD:.0125,hemi:[0xa8cbe8,0x131c26,.64],key:[0x8fb8dd,.90],rim:[0x4d7399,.62],exp:1.04,sat:.46},
-  {t:112,top:0x593050,bot:0x140d16,fog:0x2a1526,fogD:.0140,hemi:[0xd98aa5,0x160d16,.70],key:[0xd98aa5,1.15],rim:[0x7d5b8e,.66],exp:1.12,sat:.54},
-  {t:142,top:0x4e3820,bot:0x120e09,fog:0x241709,fogD:.0125,hemi:[0xffc98f,0x1a1209,.62],key:[0xffbe82,.95],rim:[0xffcf94,.42],exp:1.14,sat:.74},
+  {t:0,  top:0x55714c,bot:0x141d13,fog:0x27331f,fogD:.0110,hemi:[0xcfe3bc,0x1d2617,.52],key:[0xffc890,1.45],rim:[0x9fd47f,.50],exp:0.98,sat:1.00},
+  {t:34, top:0x5f7d54,bot:0x182217,fog:0x2c3924,fogD:.0100,hemi:[0xcfe3bc,0x1d2617,.56],key:[0xffd09c,1.58],rim:[0x9fd47f,.50],exp:1.00,sat:1.00},
+  {t:66, top:0x536f4a,bot:0x131c12,fog:0x26311e,fogD:.0112,hemi:[0xcfe3bc,0x1b2415,.50],key:[0xffca94,1.40],rim:[0x9fd47f,.52],exp:0.97,sat:1.00},
+  {t:78, top:0x2c4c6b,bot:0x0d1620,fog:0x14222f,fogD:.0150,hemi:[0x9cbfdd,0x101822,.50],key:[0x86b0d6,.80],rim:[0x4d7399,.55],exp:0.96,sat:.55},
+  {t:104,top:0x24405c,bot:0x0a121a,fog:0x101c28,fogD:.0165,hemi:[0x9cbfdd,0x0d141c,.44],key:[0x86b0d6,.68],rim:[0x4d7399,.50],exp:0.94,sat:.44},
+  {t:112,top:0x46253f,bot:0x0f0a11,fog:0x1f1020,fogD:.0175,hemi:[0xcf7f9a,0x100a10,.56],key:[0xcf7f9a,.95],rim:[0x7d5b8e,.60],exp:1.04,sat:.52},
+  {t:142,top:0x3c2b19,bot:0x0d0a07,fog:0x1a1109,fogD:.0160,hemi:[0xffc08a,0x140e08,.50],key:[0xffbe82,.80],rim:[0xffcf94,.38],exp:1.06,sat:.74},
   {t:176,top:0x0d161d,bot:0x030506,fog:0x060a0c,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.26],key:[0x8ccb6e,.32],rim:[0x3a5c7e,.32],exp:1.16,sat:.85},
   {t:222,top:0x060b0e,bot:0x020303,fog:0x030405,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.16],key:[0x8ccb6e,.20],rim:[0x3a5c7e,.20],exp:1.08,sat:.85}
 ];
@@ -803,7 +828,7 @@ const CAM=[
   {a:34, b:52, p0:[-1.70,1.70,4.10], l0:[-0.95,1.55, 0.00], p1:[-1.50,2.45,3.10], l1:[-1.05,2.35, 0.10]},
   {a:52, b:62, p0:[-1.50,2.45,3.10], l0:[-1.05,2.35, 0.10], p1:[-1.35,1.25,2.30], l1:[-1.05,0.90, 0.30]},
   {a:62, b:80, p0:[ 1.70,2.30,5.60], l0:[ 0.00,1.45, 1.00], p1:[ 0.30,1.60,3.10], l1:[ 0.00,1.38, 1.00]},
-  {a:80, b:96, p0:[ 0.30,1.60,3.10], l0:[ 0.00,1.38, 1.00], p1:[ 0.00,2.66,6.30], l1:[ 0.00,2.72, 2.80]},
+  {a:80, b:96, p0:[ 0.30,1.60,3.10], l0:[ 0.00,1.38, 1.00], p1:[ 0.00,2.50,5.80], l1:[ 0.00,2.40, 1.60]},
   {a:96, b:108,p0:[-0.75,1.65,3.00], l0:[ 0.00,1.38, 1.00], p1:[ 0.40,1.45,2.30], l1:[ 0.00,1.38, 1.00]},
   {a:108,b:126,p0:[ 0.00,1.60,3.60], l0:[ 0.00,1.40,-3.20], p1:[ 0.00,1.50,1.30], l1:[ 0.00,1.50,-3.20]},
   {a:126,b:142,p0:[ 0.00,1.50,1.30], l0:[ 0.00,1.50,-3.20], p1:[ 0.00,0.10,0.50], l1:[ 0.00,-0.70,-3.00]},
@@ -817,6 +842,262 @@ const CAM=[
 /* ===================================================================
    RUNTIME
    =================================================================== */
+
+/* ===================================================================
+   THE SOUND — an original score, generated in the browser.
+
+   There are no audio files here. The artifact sandbox blocks media
+   fetches, and the source video's own audio was never reachable, so
+   every note below is synthesised with the Web Audio API and follows
+   the same clock as the picture.
+
+   Harmonically the piece walks A major (the balcony) down to F# minor
+   (sleep), pulls apart into a detuned tritone (the dreams), settles on
+   D minor for the room, and opens into bare fifths on D for the
+   network — where the opening motif comes back, transposed.
+   =================================================================== */
+const Sound = (function(){
+  const LEVEL=2.9;                         /* master trim, set by ear against the compressor */
+  let ctx=null, ready=false, started=false, muted=false;
+  let master, comp, dry, verb, verbGain, padFilter, padGain, noiseGain;
+  const pads=[];
+  let noiseBuf=null, lastBeat=-1, lastThump=-1, lastFx=-1;
+
+  /* brownish noise — wind, room tone, the hiss under everything */
+  function noiseBuffer(sec){
+    const len=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,len,ctx.sampleRate), d=b.getChannelData(0);
+    let last=0;
+    for(let i=0;i<len;i++){ const w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=last*3.2; }
+    return b;
+  }
+  /* a decaying noise burst makes a serviceable reverb impulse */
+  function impulse(sec,decay){
+    const len=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(2,len,ctx.sampleRate);
+    for(let c=0;c<2;c++){
+      const d=b.getChannelData(c);
+      for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);
+    }
+    return b;
+  }
+
+  function build(){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return false;
+    ctx=new AC();
+
+    master=ctx.createGain(); master.gain.value=0;
+    comp=ctx.createDynamicsCompressor();
+    comp.threshold.value=-16; comp.ratio.value=4; comp.attack.value=.008; comp.release.value=.3;
+    comp.connect(master); master.connect(ctx.destination);
+
+    verb=ctx.createConvolver(); verb.buffer=impulse(4.5,2.4);
+    verbGain=ctx.createGain(); verbGain.gain.value=.5;
+    verb.connect(verbGain); verbGain.connect(comp);
+
+    dry=ctx.createGain(); dry.gain.value=.85;
+    dry.connect(comp); dry.connect(verb);
+
+    padFilter=ctx.createBiquadFilter(); padFilter.type='lowpass'; padFilter.Q.value=.7;
+    padFilter.frequency.value=1200;
+    padGain=ctx.createGain(); padGain.gain.value=0;
+    padFilter.connect(padGain); padGain.connect(dry);
+
+    for(let i=0;i<6;i++){
+      const o=ctx.createOscillator(); o.type = i<3 ? 'sawtooth' : 'triangle';
+      const g=ctx.createGain(); g.gain.value=1/7;
+      o.frequency.value=110; o.connect(g);
+      if(ctx.createStereoPanner){
+        const pan=ctx.createStereoPanner(); pan.pan.value=(i-2.5)/3.2;
+        g.connect(pan); pan.connect(padFilter);
+      } else g.connect(padFilter);
+      o.start(); pads.push({o,g});
+    }
+
+    noiseBuf=noiseBuffer(2.5);
+    const src=ctx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    const nf=ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=620; nf.Q.value=.5;
+    noiseGain=ctx.createGain(); noiseGain.gain.value=0;
+    src.connect(nf); nf.connect(noiseGain); noiseGain.connect(dry); src.start();
+
+    ready=true; return true;
+  }
+
+  /* ---- voices ---- */
+  function tone(freq, when, dur, gain, type, dest){
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type||'triangle'; o.frequency.value=freq;
+    g.gain.setValueAtTime(.0001, when);
+    g.gain.exponentialRampToValueAtTime(Math.max(gain,.0002), when+.018);
+    g.gain.exponentialRampToValueAtTime(.0001, when+dur);
+    o.connect(g); g.connect(dest||dry);
+    o.start(when); o.stop(when+dur+.06);
+    return o;
+  }
+  function burst(when, dur, gain, freq, q, type){
+    const b=ctx.createBufferSource(); b.buffer=noiseBuf;
+    const f=ctx.createBiquadFilter(); f.type=type||'bandpass'; f.frequency.value=freq; f.Q.value=q||4;
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(Math.max(gain,.0002), when);
+    g.gain.exponentialRampToValueAtTime(.0001, when+dur);
+    b.connect(f); f.connect(g); g.connect(dry);
+    b.start(when, Math.random()*1.4); b.stop(when+dur+.05);
+    return f;
+  }
+  function thump(when){
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(74, when);
+    o.frequency.exponentialRampToValueAtTime(36, when+.5);
+    g.gain.setValueAtTime(.22, when);
+    g.gain.exponentialRampToValueAtTime(.0001, when+1.1);
+    o.connect(g); g.connect(dry);
+    o.start(when); o.stop(when+1.2);
+  }
+
+  /* ---- one-shots, cued off the picture ---- */
+  const CUE={
+    chime(w){ tone(1108.73,w,1.8,.055,'sine'); tone(1661.22,w+.02,1.2,.028,'sine'); },
+    noted(w){ tone(1479.98,w,.16,.05,'square'); tone(1975.53,w+.1,.34,.035,'sine'); },
+    sleep(w){ const f=burst(w,2.6,.10,1800,1.1); f.frequency.setValueAtTime(1800,w);
+              f.frequency.exponentialRampToValueAtTime(180,w+2.4); },
+    slide(w){ tone(880,w,.12,.030,'sine'); tone(1318.51,w+.06,.5,.022,'sine'); },
+    tap(w){ tone(233.08,w,.22,.06,'square'); },
+    shudder(w){
+      const f=burst(w,1.5,.26,3200,.8,'lowpass');
+      f.frequency.setValueAtTime(3600,w); f.frequency.exponentialRampToValueAtTime(90,w+1.4);
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='sawtooth'; o.frequency.setValueAtTime(220,w);
+      o.frequency.exponentialRampToValueAtTime(41,w+1.1);
+      g.gain.setValueAtTime(.16,w); g.gain.exponentialRampToValueAtTime(.0001,w+1.3);
+      o.connect(g); g.connect(dry); o.start(w); o.stop(w+1.4);
+    },
+    shimmer(w){ tone(1244.51,w,2.4,.030,'sine'); tone(1252.0,w,2.4,.030,'sine'); tone(1864.66,w+.3,1.8,.018,'sine'); },
+    swell(w){ const f=burst(w,3.4,.09,240,.7); f.frequency.setValueAtTime(240,w);
+              f.frequency.exponentialRampToValueAtTime(2600,w+3.0); }
+  };
+  const FX=[
+    [44.0,'chime'],[47.6,'chime'],[54.2,'chime'],[57.7,'noted'],[60.3,'noted'],
+    [75.8,'sleep'],[86.0,'slide'],[88.0,'slide'],[90.0,'slide'],[92.0,'slide'],[94.0,'slide'],
+    [100.6,'tap'],[103.8,'tap'],[107.45,'shudder'],
+    [115.0,'shimmer'],[127.0,'shimmer'],[137.0,'shimmer'],
+    [143.0,'swell'],[173.0,'chime'],[176.3,'swell'],[213.0,'chime'],[219.0,'noted']
+  ];
+
+  /* ---- the score proper: one entry per section of the picture ---- */
+  const SEC=[
+    {a:0,   b:34,  chord:[110,164.81,220,277.18,329.63,493.88], cut:1500, pad:.105, nz:.020, det:5,  rv:.45,
+     scale:[329.63,415.30,493.88,554.37,659.25], pat:[0,-1,-1,-1,2,-1,-1,-1,4,-1,-1,-1,3,-1,-1,-1], beat:1.5, mg:.085, mt:'triangle'},
+    {a:34,  b:62,  chord:[110,164.81,220,277.18,329.63,493.88], cut:2100, pad:.110, nz:.018, det:5,  rv:.42,
+     scale:[329.63,415.30,493.88,554.37,659.25,830.61], pat:[0,-1,2,-1,4,-1,3,-1,2,-1,-1,1,-1,-1,-1,-1], beat:1.0, mg:.070, mt:'triangle'},
+    {a:62,  b:76,  chord:[110,164.81,220,277.18,329.63], cut:1300, pad:.110, nz:.022, det:6,  rv:.52,
+     scale:[277.18,329.63,415.30,493.88], pat:[0,-1,-1,-1,-1,-1,2,-1,-1,-1,-1,-1], beat:1.4, mg:.060, mt:'sine'},
+    {a:76,  b:100, chord:[92.50,138.59,185.00,220,277.18], cut:520, pad:.130, nz:.030, det:7,  rv:.74,
+     scale:[185.00,220,277.18,369.99], pat:[0,-1,-1,-1,-1,-1,-1,-1,1,-1,-1,-1,-1,-1,-1,-1], beat:1.8, mg:.045, mt:'sine'},
+    {a:100, b:108, chord:[92.50,138.59,185.00,233.08,277.18], cut:950, pad:.130, nz:.046, det:14, rv:.60,
+     scale:[185.00,233.08,277.18], pat:[0,-1,-1,1,-1,-1,2,-1], beat:.9, mg:.050, mt:'sine'},
+    {a:108, b:142, chord:[92.50,130.81,155.56,207.65,293.66,466.16], cut:1150, pad:.120, nz:.050, det:24, rv:.82,
+     scale:[233.08,261.63,311.13,369.99,415.30], pat:[0,-1,3,-1,-1,1,-1,-1,4,-1,-1,-1,2,-1,-1,-1], beat:.8, mg:.055, mt:'square'},
+    {a:142, b:176, chord:[73.42,110,146.83,174.61,261.63], cut:880, pad:.130, nz:.034, det:6,  rv:.56,
+     scale:[174.61,220,261.63,329.63], pat:[0,-1,-1,-1,-1,-1,2,-1,-1,-1,-1,-1], beat:1.2, mg:.040, mt:'sine', ticks:.60},
+    {a:176, b:214, chord:[73.42,110,146.83,220,329.63,440], cut:3200, pad:.120, nz:.020, det:4,  rv:.64,
+     scale:[293.66,369.99,440,587.33,659.25], pat:[0,-1,-1,2,-1,-1,4,-1,3,-1,-1,1,-1,-1,-1,-1], beat:1.0, mg:.070, mt:'triangle', thump:4},
+    {a:214, b:240, chord:[73.42,110,146.83,220], cut:760, pad:.070, nz:.012, det:4,  rv:.78,
+     scale:[293.66,440], pat:[0,-1,-1,-1,-1,-1,-1,-1], beat:2.0, mg:.050, mt:'sine'}
+  ];
+
+  function start(){
+    if(!ready && !build()) return false;
+    if(ctx.state==='suspended') ctx.resume();
+    started=true;
+    master.gain.setTargetAtTime(muted?0:LEVEL, ctx.currentTime, .6);
+    return true;
+  }
+  function setMuted(m){
+    muted=m;
+    if(ready) master.gain.setTargetAtTime(m?0:(started?LEVEL:0), ctx.currentTime, .15);
+  }
+  function resync(){ lastBeat=-1; lastThump=-1; lastFx=-2; }
+
+  function update(t, playing){
+    if(!ready || !started) return;
+    const now=ctx.currentTime;
+    let s=SEC[0]; for(const x of SEC) if(t>=x.a) s=x;
+
+    pads.forEach((p,i)=>{
+      p.o.frequency.setTargetAtTime(s.chord[i%s.chord.length], now, .85);
+      p.o.detune.setTargetAtTime((i-2.5)*s.det, now, .85);
+    });
+    padFilter.frequency.setTargetAtTime(s.cut, now, 1.1);
+    padGain.gain.setTargetAtTime(playing ? s.pad : 0, now, playing?1.1:.35);
+    noiseGain.gain.setTargetAtTime(playing ? s.nz : 0, now, 1.1);
+    verbGain.gain.setTargetAtTime(s.rv, now, 1.4);
+    if(!playing) return;
+
+    /* the motif, on a slow grid */
+    const beat=Math.floor(t/s.beat);
+    if(beat!==lastBeat){
+      if(beat===lastBeat+1){                      /* never after a scrub */
+        const step=s.pat[((beat%s.pat.length)+s.pat.length)%s.pat.length];
+        if(step>=0) tone(s.scale[step%s.scale.length], now+.02, 2.4, s.mg, s.mt);
+      }
+      lastBeat=beat;
+    }
+
+    /* a room full of people typing */
+    if(s.ticks) for(let i=0;i<3;i++){
+      if(Math.random()<s.ticks*.22) burst(now+Math.random()*.05, .035, .05+Math.random()*.05, 1500+Math.random()*2400, 7);
+    }
+
+    /* the network's slow pulse */
+    if(s.thump){
+      const n=Math.floor(t/s.thump);
+      if(n!==lastThump){ if(n===lastThump+1) thump(now+.02); lastThump=n; }
+    }
+
+    /* one-shots */
+    let fi=-1; for(let i=0;i<FX.length;i++) if(t>=FX[i][0]) fi=i;
+    if(fi>lastFx){
+      if(lastFx>=-1) for(let i=Math.max(lastFx+1,0); i<=fi; i++){
+        if(t-FX[i][0] < 1.0) CUE[FX[i][1]](now+.02);
+      }
+      lastFx=fi;
+    } else if(fi<lastFx) lastFx=fi;
+  }
+
+  return {start, setMuted, resync, update,
+          get on(){return started && !muted;},
+          get ctx(){return ctx;}, get out(){return master;}};
+})();
+
+window.Sound = Sound;
+
+/* narration, when the viewer asks for it — the browser's own voice */
+const Narrator = (function(){
+  const ok = 'speechSynthesis' in window;
+  let enabled=false;
+  function pick(){
+    const v=speechSynthesis.getVoices()||[];
+    return v.find(x=>/en[-_]GB/i.test(x.lang)&&!/google/i.test(x.name))
+        || v.find(x=>/^en/i.test(x.lang)) || null;
+  }
+  return {
+    available: ok,
+    set(v){ enabled=v && ok; if(!enabled && ok) speechSynthesis.cancel(); },
+    get enabled(){ return enabled; },
+    say(text){
+      if(!enabled||!ok) return;
+      try{
+        speechSynthesis.cancel();
+        const u=new SpeechSynthesisUtterance(text);
+        const v=pick(); if(v) u.voice=v;
+        u.rate=.92; u.pitch=.95; u.volume=.95;
+        speechSynthesis.speak(u);
+      }catch(e){}
+    },
+    stop(){ if(ok) try{ speechSynthesis.cancel(); }catch(e){} }
+  };
+})();
+
 const app=document.getElementById('app');
 const capEl=document.getElementById('cap');
 const tagsEl=document.getElementById('tags');
@@ -883,6 +1164,7 @@ function setCaption(i){
     const [,text,cls]=CAPS[i];
     capEl.textContent=text;
     capEl.className='cap '+(cls||'');
+    if(i>0) Narrator.say(text);
     requestAnimationFrame(()=>{ if(token===capToken) capEl.classList.add('on'); });
   },260);
 }
@@ -992,9 +1274,9 @@ function animate(t, dt){
   gSlides.visible = t>=85 && t<97;
   if(gSlides.visible){
     slides.forEach((s,i)=>{
-      const a=85.5+i*2.0, u=clamp((t-a)/2.3,0,1);
-      s.material.opacity = band(t,a,a+2.3,.45);
-      s.position.set(lerp(1.7,-0.25,ease(u)), 0.1, lerp(-1.4,0.5,ease(u)));
+      const a=85.5+i*2.0, u=clamp((t-a)/1.9,0,1);
+      s.material.opacity = band(t,a,a+1.9,.40);
+      s.position.set(lerp(1.1,-0.10,ease(u)), 0.1, lerp(-1.0,0.2,ease(u)));
       s.rotation.y = lerp(0.3,-0.06,ease(u));
     });
   }
@@ -1109,19 +1391,45 @@ function updateDip(t){
   let d=0;
   [142,176].forEach(x=>{ d=Math.max(d, 1-clamp(Math.abs(t-x)/0.85,0,1)); });
   d=Math.max(d, ramp(t,220,222.4));
-  d=Math.max(d, 1-ramp(t,0,1.2));
   dip.style.opacity=d.toFixed(3);
 }
 
 /* ---------- transport ------------------------------------------------ */
-let time=0, playing=true, last=performance.now();
-function seek(v){ time=clamp(v,0,DUR); capIdx=-2; TAGS.forEach(t=>t.cur=-1); }
+let time=0, playing=false, last=performance.now();
+function seek(v){ time=clamp(v,0,DUR); capIdx=-2; TAGS.forEach(t=>t.cur=-1); Sound.resync(); Narrator.stop(); }
+playBtn.textContent='Play';
 playBtn.addEventListener('click',()=>{
+  Sound.start();
   if(time>=DUR){ seek(0); playing=true; }
   else playing=!playing;
+  if(!playing) Narrator.stop();
   playBtn.textContent=playing?'Pause':'Play';
 });
-document.getElementById('restart').addEventListener('click',()=>{ seek(0); playing=true; playBtn.textContent='Pause'; });
+
+const beginBtn=document.getElementById('begin');
+beginBtn.addEventListener('click',()=>{
+  Sound.start();
+  plate.classList.add('gone');
+  playing=true; playBtn.textContent='Pause';
+});
+
+const soundBtn=document.getElementById('sound');
+let soundOn=true;
+soundBtn.addEventListener('click',()=>{
+  soundOn=!soundOn; Sound.setMuted(!soundOn);
+  soundBtn.textContent=soundOn?'Sound on':'Sound off';
+  soundBtn.setAttribute('aria-pressed',String(soundOn));
+});
+
+const voiceBtn=document.getElementById('voice');
+if(!Narrator.available){ voiceBtn.disabled=true; voiceBtn.style.opacity='.4'; }
+voiceBtn.addEventListener('click',()=>{
+  const on=!Narrator.enabled;
+  Narrator.set(on);
+  voiceBtn.textContent=on?'Narration on':'Narration off';
+  voiceBtn.setAttribute('aria-pressed',String(on));
+});
+document.getElementById('restart').addEventListener('click',()=>{ Sound.start(); seek(0); playing=true; playBtn.textContent='Pause'; });
 
 function scrubTo(clientX){
   const r=scrubEl.getBoundingClientRect();
@@ -1159,7 +1467,7 @@ function frame(now){
   const dt=Math.min((now-last)/1000,0.05); last=now;
   if(playing){
     time+=dt;
-    if(time>=DUR){ time=DUR; playing=false; playBtn.textContent='Replay'; }
+    if(time>=DUR){ time=DUR; playing=false; playBtn.textContent='Replay'; Narrator.stop(); }
   }
   const t=time;
 
@@ -1172,19 +1480,33 @@ function frame(now){
   updateTags(t);
   updateHUD(t);
   updateDip(t);
+  Sound.update(t, playing);
 
   let ci=-1; for(let i=0;i<CAPS.length;i++) if(t>=CAPS[i][0]) ci=i;
   setCaption(ci);
 
   renderer.render(scene,camera);
 
-  if(!plateHidden){ plateHidden=true; setTimeout(()=>plate.classList.add('gone'),650); }
+  plateHidden=true;
 }
 requestAnimationFrame(frame);
+}catch(err){
+  fail('The animation could not start: '+((err && err.message) ? err.message : String(err)));
+  throw err;
+}
+})();
 </script>
 
 <script>
 /* If the three.js module never resolves, say so rather than showing black. */
+addEventListener('error', function(e){
+  if(!e.error) return;                       /* ignore font/resource misses */
+  var m=document.getElementById('plateMsg');
+  if(m && m.className!=='err'){
+    m.className='err'; m.textContent='The animation stopped: '+(e.message||'unknown error');
+    var p=document.getElementById('plate'); if(p) p.classList.remove('gone');
+  }
+});
 setTimeout(function(){
   if(!window.__booted){
     var m=document.getElementById('plateMsg');
