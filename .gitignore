@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# Brain's per-project local store: it records this machine's cache path and
+# this session's stance, so it is never shared. Same rule every linked
+# project follows — see Brain's own .gitignore.
+.brain/
