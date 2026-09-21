@@ -42,6 +42,14 @@ button. `Sound on/off` is in the transport. `Narration on/off` reads the
 captions with the browser's own speech synthesis; it is off by default and
 disables itself where unsupported.
 
+**With narration on, the film waits for the voice.** Rather than letting the
+next caption cancel the line still being spoken, the clock creeps toward the
+next cue at a twelfth speed and stops just short until the utterance ends,
+plus a short beat. A line cut off mid-sentence is worse than a slower film, so
+the runtime stretches to fit the reading. An 18-second cap per line means a
+voice that never reports finishing cannot stall the piece, and where no voice
+exists at all the gate never engages.
+
 ## Movements
 
 | # | Title | Runs |

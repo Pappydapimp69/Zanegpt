@@ -1226,19 +1226,26 @@ const Sound = (function(){
 
 window.Sound = Sound;
 
-/* narration, when the viewer asks for it — the browser's own voice */
+/* Narration, when the viewer asks for it — the browser's own voice.
+   It also reports whether it is still speaking, because the film waits for
+   it: a line that gets cut off mid-sentence is worse than a slower film. */
 const Narrator = (function(){
   const ok = 'speechSynthesis' in window;
-  let enabled=false;
+  let enabled=false, active=false, tailUntil=0, deadline=0;
   function pick(){
     const v=speechSynthesis.getVoices()||[];
     return v.find(x=>/en[-_]GB/i.test(x.lang)&&!/google/i.test(x.name))
         || v.find(x=>/^en/i.test(x.lang)) || null;
   }
+  function done(){ active=false; tailUntil=performance.now()+380; }
   return {
     available: ok,
-    set(v){ enabled=v && ok; if(!enabled && ok) speechSynthesis.cancel(); },
+    set(v){ enabled=v && ok; if(!enabled){ active=false; tailUntil=0; if(ok) try{speechSynthesis.cancel();}catch(e){} } },
     get enabled(){ return enabled; },
+    /* still mid-line, or inside the short beat that follows one */
+    get busy(){ return active || performance.now()<tailUntil; },
+    /* a cap, so a voice that never fires onend cannot stall the film */
+    get expired(){ return performance.now()>deadline; },
     say(text){
       if(!enabled||!ok) return;
       try{
@@ -1246,12 +1253,16 @@ const Narrator = (function(){
         const u=new SpeechSynthesisUtterance(text);
         const v=pick(); if(v) u.voice=v;
         u.rate=.92; u.pitch=.95; u.volume=.95;
+        active=true; tailUntil=0;
+        deadline=performance.now()+Math.min(18000, 2400+text.length*95);
+        u.onend=done; u.onerror=done;
         speechSynthesis.speak(u);
-      }catch(e){}
+      }catch(e){ done(); }
     },
-    stop(){ if(ok) try{ speechSynthesis.cancel(); }catch(e){} }
+    stop(){ active=false; tailUntil=0; if(ok) try{ speechSynthesis.cancel(); }catch(e){} }
   };
 })();
+window.Narrator = Narrator;
 
 const app=document.getElementById('app');
 const capEl=document.getElementById('cap');
@@ -1640,7 +1651,15 @@ let plateHidden=false;
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min((now-last)/1000,0.05); last=now;
-  if(playing && now>=holdUntil){
+  /* Where the next caption would land. While narration is still speaking we
+     creep toward it and stop just short, so no line is ever cut off. */
+  const nextCap = (capIdx>=0 && capIdx+1<CAPS.length) ? CAPS[capIdx+1][0] : Infinity;
+  const waiting = Narrator.enabled && Narrator.busy && !Narrator.expired
+                  && (time+dt) >= nextCap-0.04;
+
+  if(playing && now>=holdUntil && waiting){
+    time = Math.min(time + dt*0.12, nextCap-0.04);
+  } else if(playing && now>=holdUntil){
     time+=dt;
     for(let i=holdIdx+1;i<HOLDS.length;i++){
       if(time>=HOLDS[i].at){              /* freeze clock, picture and voice */
