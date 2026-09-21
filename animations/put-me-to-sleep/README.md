@@ -70,6 +70,31 @@ after the narrator answers the dream: the AI's "thank you, that's useful too"
 has to land on a silence rather than on the heels of the answer, because the
 silence is where the answer goes somewhere.
 
+## Performance
+
+The room was the expensive movement: 58 people x 5 meshes plus 58 sprites, so
+roughly 350 draw calls. It is now six `InstancedMesh`es and one `Points` cloud
+for the screen glow, with the flicker riding on per-instance colour, since
+instancing has no per-instance opacity. The balcony railing is instanced too.
+
+The score used to re-schedule about sixteen `AudioParam` targets every frame.
+`setTargetAtTime` schedules a ramp that continues on its own, so those now
+fire only when the target actually changes; and the typing in the room is
+generated at a fixed rate rather than once per frame, which previously scaled
+with refresh rate. Measured at ~23% of frame time before, on a software
+renderer.
+
+The HUD wrote the timecode, the scrub position and two ARIA attributes on
+every frame; it now writes only when a displayed value changes. The caption
+plate dropped its `backdrop-filter`, which is costly to composite over a
+canvas that changes every frame, and the blended grain layer went from 2.2x
+the screen in each axis to 1.18x.
+
+Finally, **resolution is adaptive**: the piece watches its own frame time and
+scales the render buffer between 1.0 and 0.55, starting lower on phones, where
+a 3x display costs nine times the pixels for no visible gain. `window.__perf()`
+reports the current scale and rolling average.
+
 ## Notes
 
 - Captions are a selection from the transcript, not the whole of it, but they

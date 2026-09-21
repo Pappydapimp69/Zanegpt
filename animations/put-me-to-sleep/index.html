@@ -33,7 +33,7 @@ body{
 .grade{position:absolute;inset:0;pointer-events:none;z-index:2}
 .vignette{position:absolute;inset:0;
   background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 44%, rgba(0,0,0,.38) 84%, rgba(0,0,0,.70) 100%);}
-.grain{position:absolute;inset:-60%;opacity:.07;mix-blend-mode:overlay;
+.grain{position:absolute;inset:-9%;opacity:.07;mix-blend-mode:overlay;will-change:transform;
   background-image:var(--grain-url);background-size:180px 180px;
   animation:grainShift 1.1s steps(6) infinite}
 @keyframes grainShift{
@@ -92,8 +92,7 @@ body{
   font-size:clamp(19px,2.55vw,30px);line-height:1.38;font-weight:300;
   color:var(--bone);text-wrap:balance;
   padding:13px 24px;border-radius:3px;
-  background:rgba(5,8,6,.52);border:1px solid rgba(207,231,186,.10);
-  -webkit-backdrop-filter:blur(7px) saturate(.75);backdrop-filter:blur(7px) saturate(.75);
+  background:rgba(5,8,6,.72);border:1px solid rgba(207,231,186,.12);
   opacity:0;transform:translateY(7px);
   transition:opacity .62s ease,transform .62s cubic-bezier(.2,.7,.3,1)}
 .cap:empty{display:none}
@@ -106,7 +105,7 @@ body{
 .cap.wrong::before{background:var(--wrong)}
 .cap.big{font-family:var(--mono);font-size:clamp(26px,4.4vw,46px);letter-spacing:.2em;
   text-transform:uppercase;color:var(--leaf);background:none;border-color:transparent;
-  -webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+  text-shadow:0 2px 18px rgba(0,0,0,.6)}
 .cap.big::before{display:none}
 
 /* --- transport ------------------------------------------------------- */
@@ -158,7 +157,7 @@ button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
 .plate svg{width:34px;height:34px;color:var(--leaf);
   filter:drop-shadow(0 0 16px rgba(140,203,110,.6));animation:pulse 2.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
-.plate{background:rgba(6,9,7,.58);backdrop-filter:blur(2px)}
+.plate{background:rgba(6,9,7,.62)}
 .plate h1{margin:0;font-family:var(--serif);font-weight:300;font-style:italic;
   font-size:clamp(34px,6vw,62px);letter-spacing:-.01em;color:var(--bone);text-wrap:balance}
 .plate p{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.2em;
@@ -377,7 +376,14 @@ function fragTex(seed, wrongness){
 /* ---------- renderer, camera, stage --------------------------------- */
 const canvas   = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+/* Adaptive resolution. The piece has to hold up on hardware we cannot see,
+   so rather than guessing a fixed quality it watches its own frame time and
+   scales the render buffer between 1.0 and 0.55. Phones start lower: a 3x
+   display costs nine times the pixels of a 1x one for no visible gain here. */
+const isPhone = Math.min(innerWidth,innerHeight) < 760;
+const basePR  = Math.min(devicePixelRatio, isPhone ? 1.5 : 2);
+let renderScale = 1, frameAvg = 16.7, lastAdjust = 0;
+renderer.setPixelRatio(basePR);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -584,10 +590,12 @@ const deck=new THREE.Mesh(new THREE.BoxGeometry(14,.2,7),
   new THREE.MeshStandardMaterial({color:0x2b2823,roughness:1}));
 deck.position.y=-.1; gBalcony.add(deck);
 const railMat=new THREE.MeshStandardMaterial({color:0x22262a,roughness:.6,metalness:.3});
-for(let i=-6;i<=6;i++){
-  const b=new THREE.Mesh(new THREE.BoxGeometry(.05,1.5,.05),railMat);
-  b.position.set(i*.55,.75,-2.6); gBalcony.add(b);
-}
+const iRail=new THREE.InstancedMesh(new THREE.BoxGeometry(.05,1.5,.05),railMat,13);
+iRail.frustumCulled=false;
+{ const o=new THREE.Object3D();
+  for(let i=-6;i<=6;i++){ o.position.set(i*.55,.75,-2.6); o.updateMatrix(); iRail.setMatrixAt(i+6,o.matrix); }
+  iRail.instanceMatrix.needsUpdate=true; }
+gBalcony.add(iRail);
 const topRail=new THREE.Mesh(new THREE.BoxGeometry(7.2,.09,.14),railMat);
 topRail.position.set(0,1.5,-2.6); gBalcony.add(topRail);
 
@@ -733,44 +741,68 @@ roomFloor.rotation.x=-Math.PI/2; roomFloor.position.y=-2.4; gRoom.add(roomFloor)
 
 const skinMat  = new THREE.MeshStandardMaterial({color:0x221e18,roughness:.95});
 const chairMat = new THREE.MeshStandardMaterial({color:0x1f1d19,roughness:1});
-const screens  = [];
+const phoneMat = new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1});
 const roomR = seeded(77);
+const ROOM_N = 58;
 
-for(let i=0;i<58;i++){
-  const p=new THREE.Group();
-  const col=i%8, row=Math.floor(i/8);
-  p.position.set((col-3.5)*4.6+(roomR()-.5)*1.5, -2.4, -row*5.2+(roomR()-.5)*1.4);
-  p.rotation.y=roomR()*Math.PI*2;                    /* facing different directions */
-
-  const chair=new THREE.Mesh(new THREE.BoxGeometry(1.05,.12,1.05),chairMat);
-  chair.position.y=.62; p.add(chair);
-  const back=new THREE.Mesh(new THREE.BoxGeometry(1.05,1.0,.1),chairMat);
-  back.position.set(0,1.14,-.48); p.add(back);
-
-  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.62,6,14),skinMat);
-  torso.position.y=1.34; p.add(torso);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.27,18,14),skinMat);
-  head.position.set(0,1.98,.06); head.rotation.x=.42; p.add(head);   /* heads down */
-
-  const phone=new THREE.Mesh(new THREE.PlaneGeometry(.34,.62),
-    new THREE.MeshBasicMaterial({color:0xcfe7ba,transparent:true,opacity:.85}));
-  phone.position.set(0,1.44,.52); phone.rotation.x=-.95; p.add(phone);
-  const bloom=new THREE.Sprite(new THREE.SpriteMaterial({
-    map:glowTex,color:0x9fd47f,transparent:true,opacity:.5,
-    blending:THREE.AdditiveBlending,depthWrite:false}));
-  bloom.scale.setScalar(1.9); bloom.position.set(0,1.5,.48); p.add(bloom);
-
-  phone.userData={rate:.8+roomR()*2.4, phase:roomR()*6.28, bloom};
-  screens.push(phone);
-  gRoom.add(p);
+/* One InstancedMesh per part, and the screen glow as a single Points cloud:
+   58 people in 6 draw calls instead of ~350. The flicker rides on per-instance
+   colour, since instancing has no per-instance opacity. */
+function instanced(geo, mat){
+  const m=new THREE.InstancedMesh(geo, mat, ROOM_N);
+  m.frustumCulled=false;                 /* instances are spread far wider than the base geometry */
+  gRoom.add(m); return m;
 }
+const iChair=instanced(new THREE.BoxGeometry(1.05,.12,1.05), chairMat);
+const iBack =instanced(new THREE.BoxGeometry(1.05,1.0,.1), chairMat);
+const iTorso=instanced(new THREE.CapsuleGeometry(.34,.62,6,14), skinMat);
+const iHead =instanced(new THREE.SphereGeometry(.27,14,10), skinMat);
+const iPhone=instanced(new THREE.PlaneGeometry(.34,.62), phoneMat);
+
+const glowPos=new Float32Array(ROOM_N*3), glowCol=new Float32Array(ROOM_N*3);
+const screens=[];
+const _root=new THREE.Object3D(), _part=new THREE.Object3D(), _m=new THREE.Matrix4();
+const _col=new THREE.Color();
+
+function place(mesh, i, x,y,z, rx){
+  _part.position.set(x,y,z); _part.rotation.set(rx||0,0,0); _part.updateMatrix();
+  mesh.setMatrixAt(i, _m.multiplyMatrices(_root.matrix, _part.matrix));
+}
+for(let i=0;i<ROOM_N;i++){
+  const col=i%8, row=Math.floor(i/8);
+  _root.position.set((col-3.5)*4.6+(roomR()-.5)*1.5, -2.4, -row*5.2+(roomR()-.5)*1.4);
+  _root.rotation.set(0, roomR()*Math.PI*2, 0);       /* facing different directions */
+  _root.updateMatrix();
+
+  place(iChair,i, 0,.62,0);
+  place(iBack ,i, 0,1.14,-.48);
+  place(iTorso,i, 0,1.34,0);
+  place(iHead ,i, 0,1.98,.06, .42);                  /* heads down */
+  place(iPhone,i, 0,1.44,.52, -.95);
+
+  _part.position.set(0,1.5,.48); _part.updateMatrix();
+  _m.multiplyMatrices(_root.matrix,_part.matrix);
+  glowPos[i*3]=_m.elements[12]; glowPos[i*3+1]=_m.elements[13]; glowPos[i*3+2]=_m.elements[14];
+
+  screens.push({rate:.8+roomR()*2.4, phase:roomR()*6.28});
+}
+[iChair,iBack,iTorso,iHead,iPhone].forEach(m=>m.instanceMatrix.needsUpdate=true);
+for(let i=0;i<ROOM_N;i++) iPhone.setColorAt(i, _col.setHex(0xcfe7ba));
+
+const glowGeo=new THREE.BufferGeometry();
+glowGeo.setAttribute('position',new THREE.BufferAttribute(glowPos,3));
+glowGeo.setAttribute('color',new THREE.BufferAttribute(glowCol,3));
+const glowPts=new THREE.Points(glowGeo,new THREE.PointsMaterial({
+  size:2.4,map:glowTex,vertexColors:true,transparent:true,opacity:.6,
+  depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true}));
+glowPts.frustumCulled=false; gRoom.add(glowPts);
 
 /* shafts of warm light, the greenhouse that is not a greenhouse */
-for(let i=0;i<7;i++){
-  const c=new THREE.Mesh(new THREE.ConeGeometry(3.4,16,18,1,true),
+for(let i=0;i<5;i++){
+  const c=new THREE.Mesh(new THREE.ConeGeometry(3.4,16,14,1,true),
     new THREE.MeshBasicMaterial({color:0xffcf94,transparent:true,opacity:.028,
       side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
-  c.position.set((i-3)*8.5,5.6,-i*5.4+2); gRoom.add(c);
+  c.position.set((i-2)*10.5,5.6,-i*6.4+2); gRoom.add(c);
 }
 gRoom.add(new THREE.PointLight(0xffb977,4.5,42));
 gRoom.children[gRoom.children.length-1].position.set(0,5,-6);
@@ -1014,6 +1046,7 @@ const CAM=[
 const Sound = (function(){
   const LEVEL=2.9;                         /* master trim, set by ear against the compressor */
   let ctx=null, ready=false, started=false, muted=false;
+  let lastSec=null, lastPlay=null, tickAcc=0;
   let master, comp, dry, verb, verbGain, padFilter, padGain, noiseGain;
   const pads=[];
   let noiseBuf=null, lastBeat=-1, lastThump=-1, lastFx=-1;
@@ -1171,21 +1204,29 @@ const Sound = (function(){
     muted=m;
     if(ready) master.gain.setTargetAtTime(m?0:(started?LEVEL:0), ctx.currentTime, .15);
   }
-  function resync(){ lastBeat=-1; lastThump=-1; lastFx=-2; }
+  function resync(){ lastBeat=-1; lastThump=-1; lastFx=-2; lastSec=null; lastPlay=null; tickAcc=0; }
 
-  function update(t, playing){
+  function update(t, playing, dt){
     if(!ready || !started) return;
     const now=ctx.currentTime;
     let s=SEC[0]; for(const x of SEC) if(t>=x.a) s=x;
 
-    pads.forEach((p,i)=>{
-      p.o.frequency.setTargetAtTime(s.chord[i%s.chord.length], now, .85);
-      p.o.detune.setTargetAtTime((i-2.5)*s.det, now, .85);
-    });
-    padFilter.frequency.setTargetAtTime(s.cut, now, 1.1);
-    padGain.gain.setTargetAtTime(playing ? s.pad : 0, now, playing?1.1:.35);
-    noiseGain.gain.setTargetAtTime(playing ? s.nz : 0, now, 1.1);
-    verbGain.gain.setTargetAtTime(s.rv, now, 1.4);
+    /* setTargetAtTime schedules a ramp that continues on its own, so these
+       only need setting when the target actually changes — not 60x a second. */
+    if(s!==lastSec){
+      pads.forEach((p,i)=>{
+        p.o.frequency.setTargetAtTime(s.chord[i%s.chord.length], now, .85);
+        p.o.detune.setTargetAtTime((i-2.5)*s.det, now, .85);
+      });
+      padFilter.frequency.setTargetAtTime(s.cut, now, 1.1);
+      verbGain.gain.setTargetAtTime(s.rv, now, 1.4);
+      lastSec=s; lastPlay=null;
+    }
+    if(playing!==lastPlay){
+      padGain.gain.setTargetAtTime(playing ? s.pad : 0, now, playing?1.1:.35);
+      noiseGain.gain.setTargetAtTime(playing ? s.nz : 0, now, 1.1);
+      lastPlay=playing;
+    }
     if(!playing) return;
 
     /* the motif, on a slow grid */
@@ -1198,10 +1239,15 @@ const Sound = (function(){
       lastBeat=beat;
     }
 
-    /* a room full of people typing */
-    if(s.ticks) for(let i=0;i<3;i++){
-      if(Math.random()<s.ticks*.22) burst(now+Math.random()*.05, .035, .05+Math.random()*.05, 1500+Math.random()*2400, 7);
-    }
+    /* a room full of people typing, at a fixed rate rather than per frame */
+    if(s.ticks){
+      tickAcc=Math.min(tickAcc+(dt||0.016), .4);
+      const period=1/(s.ticks*16);
+      while(tickAcc>=period){
+        tickAcc-=period;
+        burst(now+Math.random()*.06, .035, .05+Math.random()*.05, 1500+Math.random()*2400, 7);
+      }
+    } else tickAcc=0;
 
     /* the network's slow pulse */
     if(s.thump){
@@ -1225,6 +1271,7 @@ const Sound = (function(){
 })();
 
 window.Sound = Sound;
+window.__perf = ()=>({scale:renderScale, avg:+frameAvg.toFixed(1)});
 
 /* Narration, when the viewer asks for it — the browser's own voice.
    It also reports whether it is still speaking, because the film waits for
@@ -1472,13 +1519,15 @@ function animate(t, dt){
   /* --- the room --------------------------------------------------- */
   gRoom.visible = t>=142.3 && t<176.6;
   if(gRoom.visible){
-    const f=reduce?0.2:1;
-    screens.forEach(s=>{
-      const d=s.userData;
-      const v=0.55+0.34*Math.sin(t*d.rate+d.phase)*f;
-      s.material.opacity=v*band(t,142.3,176.4,1.0);
-      d.bloom.material.opacity=v*0.55*band(t,142.3,176.4,1.0);
-    });
+    const f=reduce?0.2:1, fade=band(t,142.3,176.4,1.0);
+    for(let i=0;i<ROOM_N;i++){
+      const d=screens[i];
+      const v=(0.55+0.34*Math.sin(t*d.rate+d.phase)*f)*fade;
+      iPhone.setColorAt(i,_col.setRGB(0.81*v,0.91*v,0.73*v));
+      glowCol[i*3]=0.62*v; glowCol[i*3+1]=0.83*v; glowCol[i*3+2]=0.50*v;
+    }
+    iPhone.instanceColor.needsUpdate=true;
+    glowGeo.attributes.color.needsUpdate=true;
   }
 
   /* --- one node in something much larger -------------------------- */
@@ -1518,7 +1567,14 @@ function animate(t, dt){
 
 /* ---------- tags, HUD, dips ----------------------------------------- */
 const projV=new THREE.Vector3();
+let tagsWereOn=false;
 function updateTags(t){
+  const any = t>=37 && t<=62;
+  if(!any){                                        /* skip the layout read entirely */
+    if(tagsWereOn){ TAGS.forEach(tg=>tg.el.classList.remove('on')); tagsWereOn=false; }
+    return;
+  }
+  tagsWereOn=true;
   const rect=tagsEl.getBoundingClientRect();
   TAGS.forEach(tg=>{
     const on = t>=tg.a && t<=tg.b;
@@ -1542,28 +1598,37 @@ function updateTags(t){
 
 function fmt(s){ const m=Math.floor(s/60), r=Math.floor(s%60); return m+':'+String(r).padStart(2,'0'); }
 
+let lastAct='', lastTc='', lastPct=-9;
 function updateHUD(t){
   let m=MOV[0]; for(const x of MOV) if(t>=x.a) m=x;
-  actEl.textContent=m.n+' · '+m.name;
-  [...movEl.children].forEach((b,i)=>b.classList.toggle('cur',MOV[i]===m));
-  tcEl.textContent=fmt(t)+' / '+fmt(DUR);
+  const act=m.n+' · '+m.name;
+  if(act!==lastAct){
+    actEl.textContent=act; lastAct=act;
+    [...movEl.children].forEach((b,i)=>b.classList.toggle('cur',MOV[i]===m));
+  }
+  const tc=fmt(t)+' / '+fmt(DUR);
+  if(tc!==lastTc){ tcEl.textContent=tc; lastTc=tc; }
   const pct=clamp(t/DUR,0,1)*100;
-  fillEl.style.width=pct+'%'; knobEl.style.left=pct+'%';
-  scrubEl.setAttribute('aria-valuenow',Math.round(pct));
-  scrubEl.setAttribute('aria-valuetext',fmt(t)+', '+m.name);
+  if(Math.abs(pct-lastPct)>0.08){                 /* ~5 writes a second, not 60 */
+    fillEl.style.width=pct+'%'; knobEl.style.left=pct+'%';
+    scrubEl.setAttribute('aria-valuenow',Math.round(pct));
+    scrubEl.setAttribute('aria-valuetext',fmt(t)+', '+m.name);
+    lastPct=pct;
+  }
 }
 
+let lastDip=-9;
 function updateDip(t){
   let d=0;
   [142,176].forEach(x=>{ d=Math.max(d, 1-clamp(Math.abs(t-x)/0.85,0,1)); });
   d=Math.max(d, ramp(t,249.5,252.5));
-  dip.style.opacity=d.toFixed(3);
+  if(Math.abs(d-lastDip)>0.004){ dip.style.opacity=d.toFixed(3); lastDip=d; }
 }
 
 /* ---------- transport ------------------------------------------------ */
 let time=0, playing=false, last=performance.now();
 let hueAcc=0, feedHue=0;
-let holdIdx=-1, holdUntil=0;
+let holdIdx=-1, holdUntil=0, lastFrameAt=performance.now();
 function seek(v){
   time=clamp(v,0,DUR); capIdx=-2; TAGS.forEach(t=>t.cur=-1);
   Sound.resync(); Narrator.stop();
@@ -1640,7 +1705,7 @@ function resize(){
   camera.aspect=w/h;
   camera.fov = w/h < 0.9 ? 56 : 42;      /* open up on a phone */
   camera.updateProjectionMatrix();
-  const dpr=Math.min(devicePixelRatio,1.5);
+  const dpr=Math.min(basePR*renderScale, w<700?1:1.25);
   makeTargets(Math.max(2,Math.floor(w*dpr)), Math.max(2,Math.floor(h*dpr)));
   postMat.uniforms.uAspect.value=w/h;
 }
@@ -1651,6 +1716,20 @@ let plateHidden=false;
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min((now-last)/1000,0.05); last=now;
+
+  /* ease the buffer down when frames run long, and back up when they don't */
+  frameAvg += ((now-lastFrameAt) - frameAvg)*0.06; lastFrameAt=now;
+  if(now-lastAdjust > 1600 && plateHidden){
+    let next=renderScale;
+    if(frameAvg > 27 && renderScale > 0.55)      next=Math.max(0.55, renderScale-0.15);
+    else if(frameAvg < 15.5 && renderScale < 1)  next=Math.min(1, renderScale+0.1);
+    if(next!==renderScale){
+      renderScale=next;
+      renderer.setPixelRatio(basePR*renderScale);
+      resize();
+      lastAdjust=now;
+    }
+  }
   /* Where the next caption would land. While narration is still speaking we
      creep toward it and stop just short, so no line is ever cut off. */
   const nextCap = (capIdx>=0 && capIdx+1<CAPS.length) ? CAPS[capIdx+1][0] : Infinity;
@@ -1680,7 +1759,7 @@ function frame(now){
   updateTags(t);
   updateHUD(t);
   updateDip(t);
-  Sound.update(t, playing);
+  Sound.update(t, playing, dt);
 
   let ci=-1; for(let i=0;i<CAPS.length;i++) if(t>=CAPS[i][0]) ci=i;
   setCaption(ci);
