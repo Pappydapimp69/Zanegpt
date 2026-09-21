@@ -8,6 +8,22 @@ character, the dream photographs, the room and the node lattice are all built
 procedurally with three.js and canvas-drawn textures. The score is synthesised
 with the Web Audio API against the same clock.
 
+## The trip
+
+A hand-rolled post chain — two full-screen passes and a ping-pong pair of
+render targets, no addons: frame feedback (zoomed, spun and hue-rotated),
+a kaleidoscopic fold, two domain warps, chromatic split and hue cycling.
+
+It is scored like everything else rather than applied flat. The balcony only
+shimmers and its hue *oscillates* so the designed palette survives; from the
+dreams onward the hue *cycles* fully. The room folds into wedges — a room of
+people mirrored into itself — and the network opens into a zoom tunnel. The
+shudder at 1:47 spikes every parameter at once.
+
+The **Trip** slider in the transport runs 0-100 and is remembered per viewer;
+at 0 the chain is bypassed entirely and the picture renders straight.
+`prefers-reduced-motion` caps it at 30 and slows the cycling.
+
 ## The score
 
 Original, generated, no samples. A six-voice detuned pad through a lowpass
@@ -45,7 +61,13 @@ Total runtime 3:42.
   declines to describe it.
 - `three.js` is the only dependency, loaded from a CDN as an ES module.
 - Honours `prefers-reduced-motion`: camera float, shake, the glitch and the
-  screen flicker all drop out.
+  screen flicker all drop out, and the trip is capped.
+- No hard strobing: the psychedelic effects are continuous (hue rotation,
+  feedback, warp) rather than flashing, and the one glitch burst is brief and
+  low-contrast.
+- Captions sit on a frosted plate rather than relying on a text-shadow. Over a
+  picture this busy a shadow either fails to protect the type or unions into a
+  slab; the plate does both jobs and matches the app chrome.
 - The original video's audio was never reachable, so none of it is reproduced
   here; the score is written for this piece.
 - Transport: space to play/pause, arrow keys to scrub 5s, movement names to

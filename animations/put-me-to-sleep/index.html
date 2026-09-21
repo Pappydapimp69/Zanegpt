@@ -87,12 +87,16 @@ body{
 /* --- caption band ---------------------------------------------------- */
 .capwrap{position:absolute;left:0;right:0;bottom:82px;z-index:4;
   display:flex;justify-content:center;padding:0 22px;pointer-events:none}
-.cap{max-width:640px;width:100%;text-align:center;
+
+.cap{max-width:min(660px,100%);width:auto;text-align:center;
   font-size:clamp(19px,2.55vw,30px);line-height:1.38;font-weight:300;
   color:var(--bone);text-wrap:balance;
-  text-shadow:0 1px 3px rgba(0,0,0,.85),0 2px 14px rgba(0,0,0,.5);
+  padding:13px 24px;border-radius:3px;
+  background:rgba(5,8,6,.52);border:1px solid rgba(207,231,186,.10);
+  -webkit-backdrop-filter:blur(7px) saturate(.75);backdrop-filter:blur(7px) saturate(.75);
   opacity:0;transform:translateY(7px);
   transition:opacity .62s ease,transform .62s cubic-bezier(.2,.7,.3,1)}
+.cap:empty{display:none}
 .cap.on{opacity:1;transform:none}
 .cap.app{font-family:var(--mono);font-weight:400;font-size:clamp(14px,1.72vw,19px);
   letter-spacing:.055em;color:var(--leaf);line-height:1.6}
@@ -101,7 +105,8 @@ body{
 .cap.wrong{color:var(--wrong)}
 .cap.wrong::before{background:var(--wrong)}
 .cap.big{font-family:var(--mono);font-size:clamp(26px,4.4vw,46px);letter-spacing:.2em;
-  text-transform:uppercase;color:var(--leaf)}
+  text-transform:uppercase;color:var(--leaf);background:none;border-color:transparent;
+  -webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:0 2px 18px rgba(0,0,0,.6)}
 .cap.big::before{display:none}
 
 /* --- transport ------------------------------------------------------- */
@@ -124,6 +129,19 @@ button.tbtn{appearance:none;background:none;border:1px solid var(--hair);border-
   transition:border-color .2s ease,color .2s ease,background .2s ease}
 button.tbtn:hover{border-color:var(--leaf);color:var(--leaf);background:rgba(140,203,110,.07)}
 button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.trip{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ash);white-space:nowrap}
+.trip b{color:var(--leaf);font-weight:400;font-variant-numeric:tabular-nums;min-width:2.2em}
+.trip input[type=range]{appearance:none;-webkit-appearance:none;width:86px;height:14px;
+  background:none;cursor:pointer}
+.trip input[type=range]::-webkit-slider-runnable-track{height:2px;background:rgba(207,231,186,.2);border-radius:2px}
+.trip input[type=range]::-moz-range-track{height:2px;background:rgba(207,231,186,.2);border-radius:2px}
+.trip input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;
+  width:10px;height:10px;border-radius:50%;background:var(--leaf);margin-top:-4px;
+  box-shadow:0 0 9px rgba(140,203,110,.8)}
+.trip input[type=range]::-moz-range-thumb{width:10px;height:10px;border:0;border-radius:50%;
+  background:var(--leaf);box-shadow:0 0 9px rgba(140,203,110,.8)}
+.trip input[type=range]:focus-visible{outline:2px solid var(--leaf);outline-offset:3px}
 .movements{display:flex;gap:4px;flex:1 1 auto;overflow-x:auto;scrollbar-width:none}
 .movements::-webkit-scrollbar{display:none}
 .movements b{font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.1em;
@@ -202,6 +220,10 @@ button.tbtn:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
       <button class="tbtn" id="restart" type="button">Restart</button>
       <button class="tbtn" id="sound" type="button" aria-pressed="true">Sound on</button>
       <button class="tbtn" id="voice" type="button" aria-pressed="false">Narration off</button>
+      <label class="trip" for="trip">Trip
+        <input type="range" id="trip" min="0" max="100" value="78" step="1"
+               aria-label="Trip intensity">
+        <b id="tripVal">78</b></label>
       <nav class="movements" id="movements" aria-label="Movements"></nav>
     </div>
   </div>
@@ -320,15 +342,15 @@ function fragTex(seed, wrongness){
   const R=seeded(seed);
   return cvs(512,512,(g,w,h)=>{
     const base=g.createLinearGradient(0,0,w*R(),h);
-    base.addColorStop(0,`hsl(${lerp(95,330,wrongness*R())},${lerp(30,46,wrongness)}%,${lerp(22,34,R())}%)`);
-    base.addColorStop(1,`hsl(${lerp(75,300,wrongness)},${lerp(22,40,wrongness)}%,12%)`);
+    base.addColorStop(0,`hsl(${lerp(95,330,wrongness*R())},${lerp(42,62,wrongness)}%,${lerp(30,46,R())}%)`);
+    base.addColorStop(1,`hsl(${lerp(75,300,wrongness)},${lerp(34,54,wrongness)}%,16%)`);
     g.fillStyle=base;g.fillRect(0,0,w,h);
     /* smeared plant silhouettes — leaves, stems, a suggestion of a form */
     for(let i=0;i<14;i++){
       g.save();
       g.translate(R()*w,R()*h);g.rotate(R()*Math.PI*2);
-      g.globalAlpha=.18+R()*.38;
-      g.fillStyle=`hsl(${lerp(90,340,wrongness*R())},${40+R()*30}%,${28+R()*34}%)`;
+      g.globalAlpha=.30+R()*.45;
+      g.fillStyle=`hsl(${lerp(90,340,wrongness*R())},${50+R()*34}%,${36+R()*38}%)`;
       g.beginPath();
       const a=30+R()*140,b=8+R()*54;
       g.ellipse(0,0,a,b,0,0,Math.PI*2);g.fill();
@@ -337,7 +359,7 @@ function fragTex(seed, wrongness){
     /* horizontal development bands */
     for(let i=0;i<26;i++){
       const y=R()*h;
-      g.globalAlpha=.05+R()*.12;
+      g.globalAlpha=.10+R()*.20;
       g.fillStyle=R()<wrongness?'#C9718F':'#CFE7BA';
       g.fillRect(0,y,w,1+R()*7);
     }
@@ -345,8 +367,8 @@ function fragTex(seed, wrongness){
     g.globalAlpha=1;
     const fade=g.createLinearGradient(0,0,w,h*.6);
     fade.addColorStop(0,'rgba(8,11,9,0)');
-    fade.addColorStop(.55,`rgba(8,11,9,${.08+wrongness*.14})`);
-    fade.addColorStop(1,'rgba(8,11,9,.60)');
+    fade.addColorStop(.55,`rgba(8,11,9,${.02+wrongness*.08})`);
+    fade.addColorStop(1,'rgba(8,11,9,.42)');
     g.fillStyle=fade;g.fillRect(0,0,w,h);
     g.strokeStyle='rgba(207,231,186,.28)';g.lineWidth=3;g.strokeRect(2,2,w-4,h-4);
   });
@@ -359,6 +381,100 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
+
+/* ===================================================================
+   POST — feedback, kaleidoscope, warp, chromatic split, hue cycling.
+   Hand-rolled rather than EffectComposer: the whole chain is two
+   full-screen passes and a ping-pong pair of render targets, so it
+   carries no addon dependencies.
+
+   The scene pass writes sRGB into rtScene; the post and copy passes are
+   raw ShaderMaterials, which three does not encode, so the values pass
+   through untouched and land on screen already converted.
+   =================================================================== */
+const HUE_FN = `
+vec3 hueShift(vec3 c, float a){
+  const vec3 k = vec3(0.57735);
+  float ca = cos(a*6.2831853), sa = sin(a*6.2831853);
+  return c*ca + cross(k,c)*sa + k*dot(k,c)*(1.0-ca);
+}`;
+
+const postMat = new THREE.ShaderMaterial({
+  depthTest:false, depthWrite:false,
+  uniforms:{
+    tScene:{value:null}, tFeed:{value:null},
+    uTime:{value:0}, uAspect:{value:1},
+    uKal:{value:0}, uKalMix:{value:0}, uFeed:{value:0}, uWarp:{value:0}, uChroma:{value:0},
+    uHue:{value:0}, uHueFeed:{value:0}, uSat:{value:1}, uGain:{value:1},
+    uZoom:{value:1}, uRot:{value:0}, uShift:{value:0}
+  },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
+  fragmentShader: HUE_FN + `
+    uniform sampler2D tScene, tFeed;
+    uniform float uTime,uAspect,uKal,uKalMix,uFeed,uWarp,uChroma,uHue,uHueFeed,uSat,uGain,uZoom,uRot,uShift;
+    varying vec2 vUv;
+    void main(){
+      vec2 p=(vUv-0.5)*vec2(uAspect,1.0);
+
+      /* kaleidoscope: fold the frame into uKal wedges */
+      if(uKal>1.5){
+        float a=atan(p.y,p.x), r=length(p);
+        float seg=6.2831853/uKal;
+        a=mod(a+uTime*0.06,seg);
+        a=abs(a-seg*0.5);
+        p=mix(p, vec2(cos(a),sin(a))*r*0.82, uKalMix);
+      }
+
+      /* two warps: a standing ripple and a radial breath */
+      float rr=length(p);
+      p+=uWarp*0.055*vec2(sin(p.y*7.0+uTime*1.3), cos(p.x*6.0-uTime*1.1));
+      p+=uWarp*0.030*normalize(p+1e-5)*sin(rr*11.0-uTime*2.2);
+      vec2 suv=p/vec2(uAspect,1.0)+0.5;
+
+      /* chromatic split, widening toward the edges */
+      vec2 dir=normalize(p+1e-5);
+      float ca=uChroma*0.011*(0.25+rr);
+      vec3 col=vec3(
+        texture2D(tScene,suv+dir*ca).r,
+        texture2D(tScene,suv).g,
+        texture2D(tScene,suv-dir*ca).b)*uGain;
+
+      /* feedback: the previous composite, zoomed, spun and hue-rotated */
+      float cr=cos(uRot), sr=sin(uRot);
+      vec2 fp=mat2(cr,-sr,sr,cr)*(p*uZoom)+vec2(uShift*0.004,0.0);
+      vec2 fuv=fp/vec2(uAspect,1.0)+0.5;
+      vec3 fb=texture2D(tFeed,fuv).rgb;
+      fb=hueShift(fb,uHueFeed);
+      float edge=step(0.0,fuv.x)*step(fuv.x,1.0)*step(0.0,fuv.y)*step(fuv.y,1.0);
+      col=col+fb*uFeed*edge*(1.0-col);          /* screen blend, stays bounded */
+
+      col=hueShift(col,uHue);
+      col=mix(vec3(dot(col,vec3(0.299,0.587,0.114))),col,uSat);
+      gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
+    }`
+});
+const copyMat = new THREE.ShaderMaterial({
+  depthTest:false, depthWrite:false,
+  uniforms:{ tDiffuse:{value:null} },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
+  fragmentShader:`uniform sampler2D tDiffuse; varying vec2 vUv;
+    void main(){ gl_FragColor=vec4(texture2D(tDiffuse,vUv).rgb,1.0); }`
+});
+const quadScene=new THREE.Scene();
+const quadCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat);
+quad.frustumCulled=false; quadScene.add(quad);
+
+let rtScene=null, rtPrev=null, rtNext=null;
+function makeTargets(w,h){
+  [rtScene,rtPrev,rtNext].forEach(r=>r&&r.dispose());
+  const base={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,
+              format:THREE.RGBAFormat,type:THREE.UnsignedByteType,stencilBuffer:false};
+  rtScene=new THREE.WebGLRenderTarget(w,h,Object.assign({depthBuffer:true},base));
+  rtScene.texture.encoding=THREE.sRGBEncoding;
+  rtPrev =new THREE.WebGLRenderTarget(w,h,Object.assign({depthBuffer:false},base));
+  rtNext =new THREE.WebGLRenderTarget(w,h,Object.assign({depthBuffer:false},base));
+}
 
 const scene  = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(42,1,0.1,4000);
@@ -569,20 +685,21 @@ gSlides.position.set(0,2.35,1.5);
    They are just not the narrator's.                                   */
 const gDream = new THREE.Group(); scene.add(gDream); gDream.visible=false;
 const dreamR = seeded(404);
+const FRAG_N = 26;
 const frags = [];
-for(let i=0;i<15;i++){
-  const wrongness = i===14 ? 1 : dreamR()*.5;
-  const w=2.2+dreamR()*1.6;
+for(let i=0;i<FRAG_N;i++){
+  const wrongness = i===FRAG_N-1 ? 1 : dreamR()*.5;
+  const w=1.4+dreamR()*1.1;
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w*(.68+dreamR()*.28)),
     new THREE.MeshBasicMaterial({map:fragTex(100+i,wrongness),transparent:true,opacity:0,side:THREE.DoubleSide}));
-  const ang=dreamR()*Math.PI*2, rad=3.6+dreamR()*8;
-  m.position.set(Math.cos(ang)*rad, -2+dreamR()*7, Math.sin(ang)*rad-4);
+  const ang=dreamR()*Math.PI*2, rad=5.5+dreamR()*9;
+  m.position.set(Math.cos(ang)*rad, -3.5+dreamR()*9, Math.sin(ang)*rad-5);
   m.rotation.set((dreamR()-.5)*.5,(dreamR()-.5)*1.4,(dreamR()-.5)*.35);
   m.userData={phase:dreamR()*6.28, drift:.2+dreamR()*.5, order:i, wrongness};
   frags.push(m); gDream.add(m);
 }
 /* the one it cannot name — held close, lit wrong */
-const unknown = frags[14];
+const unknown = frags[FRAG_N-1];
 unknown.geometry.dispose();
 unknown.geometry = new THREE.PlaneGeometry(4.4,3.1);
 unknown.position.set(0,1.6,-3.2); unknown.rotation.set(0,0,0);
@@ -817,11 +934,36 @@ const GRADE=[
   {t:66, top:0x536f4a,bot:0x131c12,fog:0x26311e,fogD:.0112,hemi:[0xcfe3bc,0x1b2415,.50],key:[0xffca94,1.40],rim:[0x9fd47f,.52],exp:0.97,sat:1.00},
   {t:78, top:0x2c4c6b,bot:0x0d1620,fog:0x14222f,fogD:.0150,hemi:[0x9cbfdd,0x101822,.50],key:[0x86b0d6,.80],rim:[0x4d7399,.55],exp:0.96,sat:.55},
   {t:104,top:0x24405c,bot:0x0a121a,fog:0x101c28,fogD:.0165,hemi:[0x9cbfdd,0x0d141c,.44],key:[0x86b0d6,.68],rim:[0x4d7399,.50],exp:0.94,sat:.44},
-  {t:112,top:0x46253f,bot:0x0f0a11,fog:0x1f1020,fogD:.0175,hemi:[0xcf7f9a,0x100a10,.56],key:[0xcf7f9a,.95],rim:[0x7d5b8e,.60],exp:1.04,sat:.52},
-  {t:142,top:0x3c2b19,bot:0x0d0a07,fog:0x1a1109,fogD:.0160,hemi:[0xffc08a,0x140e08,.50],key:[0xffbe82,.80],rim:[0xffcf94,.38],exp:1.06,sat:.74},
-  {t:176,top:0x0d161d,bot:0x030506,fog:0x060a0c,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.26],key:[0x8ccb6e,.32],rim:[0x3a5c7e,.32],exp:1.16,sat:.85},
+  {t:112,top:0x5c3252,bot:0x160f19,fog:0x2a1730,fogD:.0150,hemi:[0xd98aa5,0x160f18,.70],key:[0xd98aa5,1.18],rim:[0x8a65a0,.66],exp:1.10,sat:.56},
+  {t:142,top:0x402d1a,bot:0x0f0b07,fog:0x1d1308,fogD:.0150,hemi:[0xffc08a,0x161008,.54],key:[0xffbe82,.86],rim:[0xffcf94,.40],exp:1.04,sat:.74},
+  {t:176,top:0x14222c,bot:0x05080a,fog:0x0a1013,fogD:.0032,hemi:[0x8ccb6e,0x040810,.40],key:[0x8ccb6e,.52],rim:[0x5a8cbe,.46],exp:1.24,sat:.85},
   {t:222,top:0x060b0e,bot:0x020303,fog:0x030405,fogD:.0035,hemi:[0x8ccb6e,0x02040a,.16],key:[0x8ccb6e,.20],rim:[0x3a5c7e,.20],exp:1.08,sat:.85}
 ];
+
+/* The trip is scored like everything else: the balcony only shimmers, the
+   dreams come apart completely, the room mirrors into wedges (a room of
+   people folded into itself), and the network opens into a zoom tunnel. */
+const TRIP=[
+  {t:0,   kal:0,  fb:.13, warp:.08, chr:.22, hue:.000, osc:.030, sat:1.10, zoom:1.0020, rot:.0004, hf:.05},
+  {t:34,  kal:0,  fb:.17, warp:.13, chr:.30, hue:.000, osc:.040, sat:1.16, zoom:1.0026, rot:.0006, hf:.07},
+  {t:62,  kal:0,  fb:.21, warp:.18, chr:.36, hue:.004, osc:.050, sat:1.20, zoom:1.0034, rot:.0008, hf:.09},
+  {t:78,  kal:5,  fb:.28, warp:.26, chr:.46, hue:.012, osc:.060, sat:1.26, zoom:1.0046, rot:.0013, hf:.14},
+  {t:104, kal:5,  fb:.32, warp:.34, chr:.56, hue:.030, osc:.070, sat:1.32, zoom:1.0058, rot:.0018, hf:.18},
+  {t:112, kal:5,  fb:.40, warp:.50, chr:.82, hue:.085, osc:.110, sat:1.42, zoom:1.0082, rot:.0028, hf:.26},
+  {t:128, kal:6,  fb:.43, warp:.56, chr:.92, hue:.100, osc:.120, sat:1.30, zoom:1.0096, rot:.0034, hf:.30},
+  {t:142, kal:6,  fb:.34, warp:.30, chr:.48, hue:.045, osc:.070, sat:1.30, zoom:1.0056, rot:.0015, hf:.16},
+  {t:176, kal:3,  fb:.38, warp:.22, chr:.54, hue:.055, osc:.080, sat:1.22, zoom:1.0070, rot:.0020, hf:.20},
+  {t:214, kal:3,  fb:.28, warp:.13, chr:.34, hue:.028, osc:.050, sat:1.22, zoom:1.0044, rot:.0010, hf:.12},
+  {t:222, kal:0,  fb:.20, warp:.09, chr:.22, hue:.016, osc:.040, sat:1.16, zoom:1.0030, rot:.0006, hf:.08}
+];
+const TRIP_KEYS=['kal','fb','warp','chr','hue','osc','sat','zoom','rot','hf'];
+const trip={};
+function tripAt(t){
+  let i=0; while(i<TRIP.length-2 && t>=TRIP[i+1].t) i++;
+  const A=TRIP[i], B=TRIP[i+1], u=smooth(clamp((t-A.t)/(B.t-A.t),0,1));
+  TRIP_KEYS.forEach(k=>{ trip[k]=lerp(A[k],B[k],u); });
+  return trip;
+}
 
 const CAM=[
   {a:0,  b:34, p0:[-3.80,1.95,6.40], l0:[-0.70,1.45, 0.00], p1:[-1.70,1.70,4.10], l1:[-0.95,1.55, 0.00]},
@@ -831,7 +973,7 @@ const CAM=[
   {a:80, b:96, p0:[ 0.30,1.60,3.10], l0:[ 0.00,1.38, 1.00], p1:[ 0.00,2.50,5.80], l1:[ 0.00,2.40, 1.60]},
   {a:96, b:108,p0:[-0.75,1.65,3.00], l0:[ 0.00,1.38, 1.00], p1:[ 0.40,1.45,2.30], l1:[ 0.00,1.38, 1.00]},
   {a:108,b:126,p0:[ 0.00,1.60,3.60], l0:[ 0.00,1.40,-3.20], p1:[ 0.00,1.50,1.30], l1:[ 0.00,1.50,-3.20]},
-  {a:126,b:142,p0:[ 0.00,1.50,1.30], l0:[ 0.00,1.50,-3.20], p1:[ 0.00,0.10,0.50], l1:[ 0.00,-0.70,-3.00]},
+  {a:126,b:142,p0:[ 0.00,1.50,1.30], l0:[ 0.00,1.50,-3.20], p1:[ 0.00,-0.30,1.90], l1:[ 0.00,-1.00,-3.00]},
   {a:142,b:160,p0:[ 0.00,2.20,18.0], l0:[ 0.00,0.60,-4.00], p1:[ 0.00,2.00,2.00], l1:[ 0.00,0.60,-16.0]},
   {a:160,b:176,p0:[ 0.00,2.00,2.00], l0:[ 0.00,0.60,-16.0], p1:[ 1.60,3.40,-14.], l1:[ 0.00,0.80,-30.0]},
   {a:176,b:196,p0:[ 0.00,14.0,210.], l0:[ 0.00,0.00, 0.00], p1:[ 0.00,18.0,118.], l1:[ 0.00,0.00, 0.00]},
@@ -1286,12 +1428,12 @@ function animate(t, dt){
   if(gDream.visible){
     frags.forEach(fr=>{
       const d=fr.userData;
-      if(d.order===14){
+      if(d.order===FRAG_N-1){
         fr.material.opacity = band(t,119,142,1.4);
         fr.position.y = 1.6 + Math.sin(t*0.5)*0.09;
         fr.rotation.z = Math.sin(t*0.33)*0.02;
       }else{
-        fr.material.opacity = band(t,109+d.order*0.7,141,1.0)*0.85;
+        fr.material.opacity = band(t,109+d.order*0.42,141,1.0);
         fr.position.y += Math.sin(t*d.drift+d.phase)*0.0016;
         fr.rotation.z = Math.sin(t*0.22+d.phase)*0.05;
         fr.rotation.y += dt*0.02;
@@ -1396,6 +1538,7 @@ function updateDip(t){
 
 /* ---------- transport ------------------------------------------------ */
 let time=0, playing=false, last=performance.now();
+let hueAcc=0, feedHue=0;
 function seek(v){ time=clamp(v,0,DUR); capIdx=-2; TAGS.forEach(t=>t.cur=-1); Sound.resync(); Narrator.stop(); }
 playBtn.textContent='Play';
 playBtn.addEventListener('click',()=>{
@@ -1450,6 +1593,16 @@ addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft')  seek(time-5);
 });
 
+const tripEl=document.getElementById('trip'), tripVal=document.getElementById('tripVal');
+let tripAmt=0.78;
+try{ const v=localStorage.getItem('pmts-trip'); if(v!==null){ tripEl.value=v; } }catch(e){}
+function readTrip(){
+  tripAmt=Number(tripEl.value)/100;
+  tripVal.textContent=tripEl.value;
+  try{ localStorage.setItem('pmts-trip',tripEl.value); }catch(e){}
+}
+tripEl.addEventListener('input',readTrip); readTrip();
+
 /* ---------- resize --------------------------------------------------- */
 function resize(){
   const w=app.clientWidth, h=app.clientHeight;
@@ -1457,6 +1610,9 @@ function resize(){
   camera.aspect=w/h;
   camera.fov = w/h < 0.9 ? 56 : 42;      /* open up on a phone */
   camera.updateProjectionMatrix();
+  const dpr=Math.min(devicePixelRatio,1.5);
+  makeTargets(Math.max(2,Math.floor(w*dpr)), Math.max(2,Math.floor(h*dpr)));
+  postMat.uniforms.uAspect.value=w/h;
 }
 addEventListener('resize',resize); resize();
 
@@ -1472,7 +1628,7 @@ function frame(now){
   const t=time;
 
   const shaking = (t>107.3&&t<109.5) ? (reduce?0:0.055*band(t,107.3,109.5,.3)) : 0;
-  app.classList.toggle('glitch', !reduce && t>107.35 && t<109.4 && Math.sin(t*44)>-0.35);
+  app.classList.toggle('glitch', !reduce && t>107.35 && t<109.4 && Math.sin(t*26)>-0.35);
 
   grade(t);
   animate(t,dt);
@@ -1485,7 +1641,50 @@ function frame(now){
   let ci=-1; for(let i=0;i<CAPS.length;i++) if(t>=CAPS[i][0]) ci=i;
   setCaption(ci);
 
-  renderer.render(scene,camera);
+  /* reduced motion keeps the piece but takes the edge off the cycling */
+  let amt = reduce ? Math.min(tripAmt,0.30) : tripAmt;
+  const spike = (t>107.3 && t<109.6) ? band(t,107.3,109.6,.3) : 0;
+
+  if(amt<0.02 || !rtScene){
+    renderer.setRenderTarget(null);
+    renderer.render(scene,camera);
+  }else{
+    const tp=tripAt(t);
+    hueAcc += dt*tp.hue*amt*(1+spike*3);
+    feedHue += dt*tp.hf*amt*0.6;
+    const u=postMat.uniforms;
+    u.uTime.value   = t;
+    const kalIn     = clamp((amt-0.34)/0.5,0,1);
+    u.uKal.value    = amt>0.34 ? Math.max(3,Math.round(tp.kal)) : 0;
+    u.uKalMix.value = kalIn*0.46;
+    u.uFeed.value   = tp.fb   * amt * (1+spike*0.5);
+    u.uWarp.value   = tp.warp * amt * (1+spike*2.2);
+    u.uChroma.value = tp.chr  * amt * (1+spike*2.6);
+    u.uHue.value    = hueAcc + Math.sin(t*0.31)*tp.osc*amt;
+    u.uHueFeed.value= feedHue;
+    u.uSat.value    = 1+(tp.sat-1)*amt;
+    u.uGain.value   = 1+amt*0.12;
+    u.uZoom.value   = 1+(tp.zoom-1)*amt*(1+spike);
+    u.uRot.value    = tp.rot  * amt * (1+spike*1.5);
+    u.uShift.value  = spike*Math.sin(t*23);
+    u.tScene.value  = rtScene.texture;
+    u.tFeed.value   = rtPrev.texture;
+
+    renderer.setRenderTarget(rtScene);
+    renderer.clear();
+    renderer.render(scene,camera);
+
+    quad.material=postMat;
+    renderer.setRenderTarget(rtNext);
+    renderer.render(quadScene,quadCam);
+
+    quad.material=copyMat;
+    copyMat.uniforms.tDiffuse.value=rtNext.texture;
+    renderer.setRenderTarget(null);
+    renderer.render(quadScene,quadCam);
+
+    const swap=rtPrev; rtPrev=rtNext; rtNext=swap;
+  }
 
   plateHidden=true;
 }
